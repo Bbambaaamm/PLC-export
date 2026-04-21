@@ -283,15 +283,36 @@ def metrics():
         ]
         active_error_count = sum(int(bool(last_data.get(k, 0))) for k in error_keys)
 
-        latest_target = None
+        excel_target_by_date = {}
         for entry in pending_excel_snapshot:
             value = entry.get("prognosa")
-            if value is not None:
-                latest_target = value
+            datum = entry.get("datum")
+            if value is None or datum is None:
+                continue
+            parsed_date = pd.to_datetime(datum, errors="coerce")
+            if pd.isna(parsed_date):
+                continue
+            excel_target_by_date[parsed_date.date().isoformat()] = float(value)
+
+        today_local = pd.Timestamp.now(tz="Europe/Prague").date().isoformat()
+        active_target_date = None
+        if today_local in excel_target_by_date:
+            active_target_date = today_local
+        else:
+            # Pokud dnes v Excelu chybí, vezmeme poslední dostupný den do dneška.
+            eligible_dates = [d for d in excel_target_by_date if d <= today_local]
+            if eligible_dates:
+                active_target_date = max(eligible_dates)
+
+        active_target = (
+            excel_target_by_date.get(active_target_date)
+            if active_target_date is not None
+            else None
+        )
 
         throughput_target_gap = (
-            float(last_data["dnes_pocet_boxu"] - latest_target)
-            if latest_target is not None
+            float(last_data["dnes_pocet_boxu"] - active_target)
+            if active_target is not None
             else 0.0
         )
         now_ts = time.time()
@@ -563,6 +584,8 @@ def metrics():
         lines += [
             "# HELP target_pocet_boxu Prognóza počtu boxů (timestamp je datum z Excelu)",
             "# TYPE target_pocet_boxu gauge",
+            f"target_pocet_boxu {active_target if active_target is not None else 'NaN'}",
+            "",
         ]
         for entry in pending_excel_snapshot:
             datum = entry["datum"]
@@ -575,6 +598,22 @@ def metrics():
             # Díky tomu Grafana time picker filtruje podle reálného dne.
             sample_ts_ms = int(parsed_date.timestamp() * 1000)
 
+        lines += [
+            "# HELP target_pocet_boxu_aktivni_info Aktivní target počtu boxů s informací o datu",
+            "# TYPE target_pocet_boxu_aktivni_info gauge",
+        ]
+        if active_target_date is not None and active_target is not None:
+            d = _escape_label_value(active_target_date)
+            lines.append(f'target_pocet_boxu_aktivni_info{{datum="{d}"}} {active_target}')
+        else:
+            lines.append('target_pocet_boxu_aktivni_info{datum=""} NaN')
+
+        lines += [
+            "",
+            "# HELP target_pocet_boxu_podle_dne Prognóza počtu boxů po dnech (debug snapshot z Excelu)",
+            "# TYPE target_pocet_boxu_podle_dne gauge",
+        ]
+        for datum, prognosa in sorted(excel_target_by_date.items()):
             d = _escape_label_value(datum)
             lines.append(f'target_pocet_boxu{{datum="{d}"}} {prognosa} {sample_ts_ms}')
 
