@@ -135,6 +135,21 @@ br08_prefix_counters = {
 # Bounded “processed dates” – aby to nerostlo donekonečna
 _processed_dates_set = set()
 _processed_dates_fifo = collections.deque(maxlen=400)
+_processed_br08_set = set()
+_processed_br08_fifo = collections.deque(maxlen=5000)
+_processed_prostoje_set = set()
+_processed_prostoje_fifo = collections.deque(maxlen=3000)
+
+# 📊 Nízkokardinalitní agregace pro dashboard/KPI
+line_kpis = {
+    "br08_events_total": 0,
+    "prostoje_events_total": 0,
+    "prostoje_duration_seconds_total": 0,
+}
+br08_response_counters = collections.Counter()
+br08_direction_counters = collections.Counter()
+prostoje_type_counters = collections.Counter()
+prostoje_station_counters = collections.Counter()
 
 
 def _escape_label_value(v) -> str:
@@ -178,6 +193,97 @@ def metrics():
             _processed_dates_set.discard(old)
 
         pending_excel_snapshot = list(pending_excel)
+
+        # -----------------------------------------------------------------
+        # ✅ Nízkokardinalitní KPI agregace z eventů
+        # -----------------------------------------------------------------
+        for entry in pending_metrics_snapshot:
+            event_key = (
+                entry.get("box_id"),
+                int(entry.get("timestamp", 0)),
+                int(entry.get("kod_odpovedi", 0)),
+                int(entry.get("smer_vytrideni", 0)),
+            )
+            if event_key in _processed_br08_set:
+                continue
+
+            _processed_br08_set.add(event_key)
+            _processed_br08_fifo.append(event_key)
+            line_kpis["br08_events_total"] += 1
+
+            br08_response_counters[str(event_key[2])] += 1
+            br08_direction_counters[str(event_key[3])] += 1
+
+        while len(_processed_br08_set) > _processed_br08_fifo.maxlen:
+            old = _processed_br08_fifo.popleft()
+            _processed_br08_set.discard(old)
+
+        for entry in pending_prostoje_snapshot:
+            event_key = (
+                entry.get("prostoj"),
+                int(entry.get("start_timestamp", 0)),
+                int(entry.get("end_timestamp", 0)),
+                entry.get("type"),
+                int(entry.get("duration", 0)),
+            )
+            if event_key in _processed_prostoje_set:
+                continue
+
+            _processed_prostoje_set.add(event_key)
+            _processed_prostoje_fifo.append(event_key)
+            line_kpis["prostoje_events_total"] += 1
+            line_kpis["prostoje_duration_seconds_total"] += max(event_key[4], 0)
+            prostoje_type_counters[str(event_key[3])] += 1
+            prostoje_station_counters[str(event_key[0])] += 1
+
+        while len(_processed_prostoje_set) > _processed_prostoje_fifo.maxlen:
+            old = _processed_prostoje_fifo.popleft()
+            _processed_prostoje_set.discard(old)
+
+        # -----------------------------------------------------------------
+        # ✅ KPI snapshoty pro line dashboard
+        # -----------------------------------------------------------------
+        machine_state_keys = [
+            "smartlog_zapnut",
+            "vahaChod",
+            "M1",
+            "M2",
+            "safetyReady_levy_T1",
+            "safetyReady_pravy_T2",
+            "V10_safetyReady",
+            "V20_safetyReady",
+            "Line1_SystemReady",
+            "Line2_SystemReady",
+        ]
+        machines_ready = sum(int(bool(last_data.get(k, 0))) for k in machine_state_keys)
+        machines_total = len(machine_state_keys)
+        machines_ready_ratio = (machines_ready / machines_total) if machines_total else 0.0
+
+        error_keys = [
+            "V10_bMachineError",
+            "V10_bLidSupplyLowError",
+            "V10_bGlueSupplyLowError",
+            "V20_bMachineError",
+            "V20_bLidSupplyLowError",
+            "V20_bGlueSupplyLowError",
+            "Line1_LabelOut",
+            "Line1_RibbonOut",
+            "Line2_LabelOut",
+            "Line2_RibbonOut",
+        ]
+        active_error_count = sum(int(bool(last_data.get(k, 0))) for k in error_keys)
+
+        latest_target = None
+        for entry in pending_excel_snapshot:
+            value = entry.get("prognosa")
+            if value is not None:
+                latest_target = value
+
+        throughput_target_gap = (
+            float(last_data["dnes_pocet_boxu"] - latest_target)
+            if latest_target is not None
+            else 0.0
+        )
 
         # -----------------------------------------------------------------
         # ✅ Základní gauge metriky
@@ -339,6 +445,68 @@ def metrics():
         ]
         for prefix, value in br08_prefix_counters_snapshot.items():
             lines.append(f'br08_prefix_total{{prefix="{prefix}"}} {value}')
+        lines.append("")
+
+        # -----------------------------------------------------------------
+        # ✅ KPI metriky pro top-level dashboard (nízká kardinalita)
+        # -----------------------------------------------------------------
+        lines += [
+            "# HELP line_br08_events_total Celkový počet BR08 událostí",
+            "# TYPE line_br08_events_total counter",
+            f"line_br08_events_total {line_kpis['br08_events_total']}",
+            "",
+            "# HELP line_prostoje_events_total Celkový počet ukončených prostojů",
+            "# TYPE line_prostoje_events_total counter",
+            f"line_prostoje_events_total {line_kpis['prostoje_events_total']}",
+            "",
+            "# HELP line_prostoje_duration_seconds_total Celková délka prostojů v sekundách",
+            "# TYPE line_prostoje_duration_seconds_total counter",
+            f"line_prostoje_duration_seconds_total {line_kpis['prostoje_duration_seconds_total']}",
+            "",
+            "# HELP line_machines_ready_ratio Podíl strojů v ready/running stavu 0-1",
+            "# TYPE line_machines_ready_ratio gauge",
+            f"line_machines_ready_ratio {machines_ready_ratio}",
+            "",
+            "# HELP line_machine_errors_active Počet aktivních error stavů na lince",
+            "# TYPE line_machine_errors_active gauge",
+            f"line_machine_errors_active {active_error_count}",
+            "",
+            "# HELP line_throughput_target_gap Rozdíl mezi dnešním počtem boxů a aktuálním targetem",
+            "# TYPE line_throughput_target_gap gauge",
+            f"line_throughput_target_gap {throughput_target_gap}",
+            "",
+        ]
+
+        lines += [
+            "# HELP line_br08_response_total BR08 odpovědi podle kódu",
+            "# TYPE line_br08_response_total counter",
+        ]
+        for code, value in sorted(br08_response_counters.items()):
+            lines.append(f'line_br08_response_total{{kod_odpovedi="{_escape_label_value(code)}"}} {value}')
+        lines.append("")
+
+        lines += [
+            "# HELP line_br08_direction_total BR08 třídění podle směru",
+            "# TYPE line_br08_direction_total counter",
+        ]
+        for direction, value in sorted(br08_direction_counters.items()):
+            lines.append(f'line_br08_direction_total{{smer_vytrideni="{_escape_label_value(direction)}"}} {value}')
+        lines.append("")
+
+        lines += [
+            "# HELP line_prostoje_type_total Prostoje podle typu",
+            "# TYPE line_prostoje_type_total counter",
+        ]
+        for typ, value in sorted(prostoje_type_counters.items()):
+            lines.append(f'line_prostoje_type_total{{type="{_escape_label_value(typ)}"}} {value}')
+        lines.append("")
+
+        lines += [
+            "# HELP line_prostoje_station_total Prostoje podle části linky",
+            "# TYPE line_prostoje_station_total counter",
+        ]
+        for station, value in sorted(prostoje_station_counters.items()):
+            lines.append(f'line_prostoje_station_total{{prostoj="{_escape_label_value(station)}"}} {value}')
         lines.append("")
 
         # -----------------------------------------------------------------
