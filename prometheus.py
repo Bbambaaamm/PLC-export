@@ -1,0 +1,367 @@
+# =====================================================================
+# Soubor   : prometheus.py
+# Účel     : /metrics endpoint (Flask) + sdílené struktury + thread-safety
+# Autor    : Michal
+# Poznámka : Tento soubor:
+#            - drží sdílené struktury pro PLC reader a Flask
+#            - exportuje metriky pro Prometheus
+#            - používá lock kvůli souběhu PLC vlákna a /metrics requestů
+# =====================================================================
+
+from flask import Flask, Response
+import collections
+import threading
+import logging
+import pandas as pd
+
+app = Flask(__name__)
+log = logging.getLogger("prometheus")
+
+# 🔒 Lock pro sdílené struktury (PLC vlákno + Flask requesty)
+last_data_lock = threading.Lock()
+
+# 📡 Uchování posledních hodnot a průjezdů
+last_data = {
+    # Smartlog základ
+    "dnes_pocet_boxu": 0,
+    "smartlog_zapnut": 0,
+    "vahaChod": 0,
+
+    # Gebhardt pohony
+    "M1": 0,
+    "M2": 0,
+
+    # Prostoje
+    "prostoj1": 0,  # před váhou
+    "prostoj2": 0,  # před Ranpak V10
+    "prostoj3": 0,  # před Ranpak V20
+    "prostoj4": 0,  # před AKL - pravá strana
+    "prostoj5": 0,  # před AKL - levá strana
+    "prostoj6": 0,  # před pravým teleskopem
+    "prostoj7": 0,  # před levým teleskopem
+
+    # BR08 průjezdy
+    "br08_prujezdy": collections.deque(maxlen=50),
+
+    # BR08 pomocné diagnostické klíče
+    "br08_last_raw": {},
+    "br08_ignored_reset_box_id": None,
+
+    # 🚚 Levý teleskop
+    "safetyReady_levy_T1": 0,
+    "pasChod_levy_T1": 0,
+
+    # 🚚 Pravý teleskop
+    "safetyReady_pravy_T2": 0,
+    "pasChod_pravy_T2": 0,
+
+    # 🛑 Bezpečnostní tlačítka Gebhardt (ESTOP)
+    "aktivovanoTlacitko1": 0,
+    "aktivovanoTlacitko2": 0,
+    "aktivovanoTlacitko3": 0,
+    "aktivovanoTlacitko4": 0,
+    "aktivovanoTlacitko5": 0,
+    "aktivovanoTlacitko6": 0,
+
+    # 🛑 Bezpečnostní tlačítka Smartlog (ESTOP)
+    "aktivovanoTlacitko_ES_TOP1": 0,
+    "aktivovanoTlacitko_ES_TOP2": 0,
+    "aktivovanoTlacitko_ES_TOP3": 0,
+    "aktivovanoTlacitko_ES_TOP4": 0,
+    "aktivovanoTlacitko_ES_TOP5": 0,
+    "aktivovanoTlacitko_ES_TOP6": 0,
+    "aktivovanoTlacitko_ES_TOP7": 0,
+    "aktivovanoTlacitko_ES_TOP8": 0,
+    "aktivovanoTlacitko_ES_TOP9": 0,
+    "aktivovanoTlacitko_ES_TOP10": 0,
+
+    # 🚚 Ranpak V10
+    "V10_bReadyToReceiveBox": 0,
+    "V10_bReadyToSendBox": 0,
+    "V10_bMachineError": 0,
+    "V10_bLidSupplyLow": 0,
+    "V10_bLidSupplyLowError": 0,
+    "V10_bGlueSupplyLowError": 0,
+    "V10_safetyReady": 0,
+
+    # 🚚 Ranpak V20
+    "V20_bReadyToReceiveBox": 0,
+    "V20_bReadyToSendBox": 0,
+    "V20_bMachineError": 0,
+    "V20_bLidSupplyLow": 0,
+    "V20_bLidSupplyLowError": 0,
+    "V20_bGlueSupplyLowError": 0,
+    "V20_safetyReady": 0,
+
+    # AKL Line1
+    "Line1_SystemReady": 0,
+    "Line1_StartDispatch": 0,
+    "Line1_PassthroughMode": 0,
+    "Line1_LabelWarning": 0,
+    "Line1_LabelOut": 0,
+    "Line1_RibbonWarning": 0,
+    "Line1_RibbonOut": 0,
+
+    # AKL Line2
+    "Line2_SystemReady": 0,
+    "Line2_StartDispatch": 0,
+    "Line2_PassthroughMode": 0,
+    "Line2_LabelWarning": 0,
+    "Line2_LabelOut": 0,
+    "Line2_RibbonWarning": 0,
+    "Line2_RibbonOut": 0,
+
+    # 📊 Target Počet Boxů - Načítání z Excelu
+    "target_pocet_boxu": collections.deque(maxlen=20),
+}
+
+# 🔄 Fronty (sdílené)
+# Poznámka:
+# Tyto fronty jsou schválně bounded, aby nerostly donekonečna.
+pending_metrics = collections.deque(maxlen=500)     # BR08 validní události
+pending_prostoje = collections.deque(maxlen=500)    # ukončené prostoje
+pending_excel = collections.deque(maxlen=200)       # excel řádky
+
+# 📦 BR08 prefix countery
+# Slouží pro přesné počítání validních průjezdů podle prefixu box_id
+# a následné použití v PromQL přes increase(...)
+br08_prefix_counters = {
+    "05": 0,
+    "10": 0,
+    "15": 0,
+    "20": 0,
+}
+
+# Bounded “processed dates” – aby to nerostlo donekonečna
+_processed_dates_set = set()
+_processed_dates_fifo = collections.deque(maxlen=400)
+
+
+def _escape_label_value(v) -> str:
+    """
+    Prometheus text format:
+    label value musí escapovat backslash, quotes a newlines.
+    """
+    s = "" if v is None else str(v)
+    s = s.replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
+    return s
+
+
+@app.route("/metrics")
+def metrics():
+    """
+    📡 Vrátí hodnoty pro Prometheus.
+
+    Poznámka:
+    - čte last_data pod lockem
+    - endpoint je co nejvíce nedestruktivní
+    - dočasné snapshoty se používají proto, aby se data během renderu neměnila
+    """
+    lines = []
+
+    with last_data_lock:
+        # snapshoty sdílených struktur
+        pending_prostoje_snapshot = list(pending_prostoje)
+        pending_metrics_snapshot = list(pending_metrics)
+        br08_prefix_counters_snapshot = dict(br08_prefix_counters)
+
+        # 📊 Excel targety – doplnění jen nových datumů
+        for datum, prognosa in last_data["target_pocet_boxu"]:
+            if datum not in _processed_dates_set:
+                pending_excel.append({"datum": datum, "prognosa": prognosa})
+                _processed_dates_set.add(datum)
+                _processed_dates_fifo.append(datum)
+
+        # evikce ze setu
+        while len(_processed_dates_set) > _processed_dates_fifo.maxlen:
+            old = _processed_dates_fifo.popleft()
+            _processed_dates_set.discard(old)
+
+        pending_excel_snapshot = list(pending_excel)
+
+        # -----------------------------------------------------------------
+        # ✅ Základní gauge metriky
+        # -----------------------------------------------------------------
+        lines += [
+            "# HELP dnes_pocet_boxu Počet boxů dnes",
+            "# TYPE dnes_pocet_boxu gauge",
+            f"dnes_pocet_boxu {last_data['dnes_pocet_boxu']}",
+            "",
+        ]
+
+        lines += [
+            "# HELP smartlog_zapnut Indikuje, zda je dopravník zapnut",
+            "# TYPE smartlog_zapnut gauge",
+            f"smartlog_zapnut {last_data['smartlog_zapnut']}",
+            "",
+        ]
+
+        lines += [
+            "# HELP vahaChod Indikuje, zda je váha zapnutá",
+            "# TYPE vahaChod gauge",
+            f"vahaChod {last_data['vahaChod']}",
+            "",
+        ]
+
+        # -----------------------------------------------------------------
+        # ✅ Teleskopy
+        # -----------------------------------------------------------------
+        lines += [
+            "# HELP safetyReady_levy_T1 Indikuje připravenost levého teleskopu",
+            "# TYPE safetyReady_levy_T1 gauge",
+            f"safetyReady_levy_T1 {last_data['safetyReady_levy_T1']}",
+            "",
+            "# HELP pasChod_levy_T1 Indikuje pasový chod levého teleskopu",
+            "# TYPE pasChod_levy_T1 gauge",
+            f"pasChod_levy_T1 {last_data['pasChod_levy_T1']}",
+            "",
+            "# HELP safetyReady_pravy_T2 Indikuje připravenost pravého teleskopu",
+            "# TYPE safetyReady_pravy_T2 gauge",
+            f"safetyReady_pravy_T2 {last_data['safetyReady_pravy_T2']}",
+            "",
+            "# HELP pasChod_pravy_T2 Indikuje pasový chod pravého teleskopu",
+            "# TYPE pasChod_pravy_T2 gauge",
+            f"pasChod_pravy_T2 {last_data['pasChod_pravy_T2']}",
+            "",
+        ]
+
+        # -----------------------------------------------------------------
+        # ✅ Pohony
+        # -----------------------------------------------------------------
+        lines += [
+            "# HELP M1 Indikuje stav pohonu M1",
+            "# TYPE M1 gauge",
+            f"M1 {last_data['M1']}",
+            "",
+            "# HELP M2 Indikuje stav pohonu M2",
+            "# TYPE M2 gauge",
+            f"M2 {last_data['M2']}",
+            "",
+        ]
+
+        # -----------------------------------------------------------------
+        # ✅ Bezpečnostní tlačítka Gebhardt
+        # -----------------------------------------------------------------
+        for i in range(1, 7):
+            k = f"aktivovanoTlacitko{i}"
+            lines += [
+                f"# HELP {k} Indikuje stav bezpečnostního tlačítka {i}",
+                f"# TYPE {k} gauge",
+                f"{k} {last_data[k]}",
+                "",
+            ]
+
+        # -----------------------------------------------------------------
+        # ✅ Bezpečnostní tlačítka Smartlog
+        # -----------------------------------------------------------------
+        for i in range(1, 11):
+            k = f"aktivovanoTlacitko_ES_TOP{i}"
+            lines += [
+                f"# HELP {k} Indikuje stav bezpečnostního tlačítka {i}",
+                f"# TYPE {k} gauge",
+                f"{k} {last_data[k]}",
+                "",
+            ]
+
+        # -----------------------------------------------------------------
+        # ✅ Ranpak + AKL
+        # -----------------------------------------------------------------
+        simple_keys = [
+            "V10_bReadyToReceiveBox", "V10_bReadyToSendBox", "V10_bMachineError",
+            "V10_bLidSupplyLow", "V10_bLidSupplyLowError", "V10_bGlueSupplyLowError", "V10_safetyReady",
+            "V20_bReadyToReceiveBox", "V20_bReadyToSendBox", "V20_bMachineError",
+            "V20_bLidSupplyLow", "V20_bLidSupplyLowError", "V20_bGlueSupplyLowError", "V20_safetyReady",
+            "Line1_SystemReady", "Line1_StartDispatch", "Line1_PassthroughMode",
+            "Line1_LabelWarning", "Line1_LabelOut", "Line1_RibbonWarning", "Line1_RibbonOut",
+            "Line2_SystemReady", "Line2_StartDispatch", "Line2_PassthroughMode",
+            "Line2_LabelWarning", "Line2_LabelOut", "Line2_RibbonWarning", "Line2_RibbonOut",
+        ]
+
+        for k in simple_keys:
+            lines += [
+                f"# HELP {k} PLC stav {k}",
+                f"# TYPE {k} gauge",
+                f"{k} {last_data[k]}",
+                "",
+            ]
+
+        # -----------------------------------------------------------------
+        # ✅ Prostoje – event export
+        # Poznámka:
+        # Tohle zachovává původní chování.
+        # Pro čistě produkční Prometheus model je lepší časem převést
+        # na agregované countery/histogramy.
+        # -----------------------------------------------------------------
+        lines += [
+            "# HELP prostoje_info Prostoje se startem, koncem a délkou",
+            "# TYPE prostoje_info gauge",
+        ]
+        for entry in pending_prostoje_snapshot:
+            prostoj = _escape_label_value(entry.get("prostoj"))
+            st = _escape_label_value(entry.get("start_timestamp"))
+            et = _escape_label_value(entry.get("end_timestamp"))
+            typ = _escape_label_value(entry.get("type"))
+            dur = int(entry.get("duration", 0))
+            lines.append(
+                f'prostoje_info{{prostoj="{prostoj}", start_timestamp="{st}", end_timestamp="{et}", type="{typ}"}} {dur}'
+            )
+        lines.append("")
+
+        # -----------------------------------------------------------------
+        # ✅ BR08 – event export
+        # Poznámka:
+        # Zachován původní význam.
+        # Pokud bude časem problém s cardinalitou, předělá se na agregaci.
+        # -----------------------------------------------------------------
+        lines += [
+            "# HELP br08_info BR08 průjezdy",
+            "# TYPE br08_info gauge",
+        ]
+        for entry in pending_metrics_snapshot:
+            box_id = _escape_label_value(entry.get("box_id"))
+            ts = _escape_label_value(entry.get("timestamp"))
+            kod = _escape_label_value(entry.get("kod_odpovedi", ""))
+            smer = _escape_label_value(entry.get("smer_vytrideni", ""))
+            lines.append(
+                f'br08_info{{box_id="{box_id}", timestamp="{ts}", kod_odpovedi="{kod}", smer_vytrideni="{smer}"}} 1'
+            )
+        lines.append("")
+
+        # -----------------------------------------------------------------
+        # ✅ BR08 prefix countery
+        # Slouží pro přesné počítání boxů podle prefixu přes increase(...)
+        # Např.:
+        # increase(br08_prefix_total{prefix="10"}[1h])
+        # -----------------------------------------------------------------
+        lines += [
+            "# HELP br08_prefix_total Počet BR08 průjezdů podle prefixu box_id",
+            "# TYPE br08_prefix_total counter",
+        ]
+        for prefix, value in br08_prefix_counters_snapshot.items():
+            lines.append(f'br08_prefix_total{{prefix="{prefix}"}} {value}')
+        lines.append("")
+
+        # -----------------------------------------------------------------
+        # ✅ Target počet boxů z Excelu
+        # -----------------------------------------------------------------
+        lines += [
+            "# HELP target_pocet_boxu Prognóza počtu boxů",
+            "# TYPE target_pocet_boxu gauge",
+        ]
+        for entry in pending_excel_snapshot:
+            datum = entry["datum"]
+            prognosa = entry["prognosa"]
+            ts = pd.to_datetime(datum).timestamp()
+
+            d = _escape_label_value(datum)
+            t = _escape_label_value(int(ts))
+            lines.append(f'target_pocet_boxu{{datum="{d}", timestamp="{t}"}} {prognosa}')
+
+        lines.append("")
+
+    return Response("\n".join(lines), mimetype="text/plain; version=0.0.4; charset=utf-8")
+
+
+def start_prometheus():
+    """Spustí Flask server pro Prometheus."""
+    app.run(host="0.0.0.0", port=8000)
