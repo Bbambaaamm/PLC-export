@@ -561,17 +561,22 @@ def metrics():
         # ✅ Target počet boxů z Excelu
         # -----------------------------------------------------------------
         lines += [
-            "# HELP target_pocet_boxu Prognóza počtu boxů",
+            "# HELP target_pocet_boxu Prognóza počtu boxů (timestamp je datum z Excelu)",
             "# TYPE target_pocet_boxu gauge",
         ]
         for entry in pending_excel_snapshot:
             datum = entry["datum"]
             prognosa = entry["prognosa"]
-            ts = pd.to_datetime(datum).timestamp()
+            parsed_date = pd.to_datetime(datum, errors="coerce")
+            if pd.isna(parsed_date):
+                continue
+
+            # Prometheus timestamp je v milisekundách.
+            # Díky tomu Grafana time picker filtruje podle reálného dne.
+            sample_ts_ms = int(parsed_date.timestamp() * 1000)
 
             d = _escape_label_value(datum)
-            t = _escape_label_value(int(ts))
-            lines.append(f'target_pocet_boxu{{datum="{d}", timestamp="{t}"}} {prognosa}')
+            lines.append(f'target_pocet_boxu{{datum="{d}"}} {prognosa} {sample_ts_ms}')
 
         lines.append("")
 
