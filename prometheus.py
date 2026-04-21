@@ -12,6 +12,7 @@ from flask import Flask, Response
 import collections
 import threading
 import logging
+import time
 import pandas as pd
 
 app = Flask(__name__)
@@ -113,6 +114,13 @@ last_data = {
 
     # 📊 Target Počet Boxů - Načítání z Excelu
     "target_pocet_boxu": collections.deque(maxlen=20),
+
+    # 🩺 Exporter/PLC self-observability
+    "plc_last_read_timestamp": 0.0,
+    "plc_poll_count": 0,
+    "plc_read_errors_total": 0,
+    "plc_reconnects_total": 0,
+    "metrics_scrapes_total": 0,
 }
 
 # 🔄 Fronty (sdílené)
@@ -173,8 +181,10 @@ def metrics():
     - dočasné snapshoty se používají proto, aby se data během renderu neměnila
     """
     lines = []
+    scrape_started = time.time()
 
     with last_data_lock:
+        last_data["metrics_scrapes_total"] += 1
         # snapshoty sdílených struktur
         pending_prostoje_snapshot = list(pending_prostoje)
         pending_metrics_snapshot = list(pending_metrics)
@@ -283,6 +293,11 @@ def metrics():
             float(last_data["dnes_pocet_boxu"] - latest_target)
             if latest_target is not None
             else 0.0
+        )
+        now_ts = time.time()
+        plc_last_read_ts = float(last_data.get("plc_last_read_timestamp", 0.0) or 0.0)
+        plc_data_staleness_seconds = (
+            max(0.0, now_ts - plc_last_read_ts) if plc_last_read_ts > 0 else -1.0
         )
 
         # -----------------------------------------------------------------
@@ -478,6 +493,39 @@ def metrics():
         ]
 
         lines += [
+            "# HELP plc_last_read_timestamp Unix timestamp posledního úspěšného PLC čtení",
+            "# TYPE plc_last_read_timestamp gauge",
+            f"plc_last_read_timestamp {plc_last_read_ts}",
+            "",
+            "# HELP plc_data_staleness_seconds Stáří posledních PLC dat v sekundách; -1 znamená dosud bez čtení",
+            "# TYPE plc_data_staleness_seconds gauge",
+            f"plc_data_staleness_seconds {plc_data_staleness_seconds}",
+            "",
+            "# HELP plc_poll_total Počet úspěšných PLC poll cyklů",
+            "# TYPE plc_poll_total counter",
+            f"plc_poll_total {int(last_data.get('plc_poll_count', 0))}",
+            "",
+            "# HELP plc_read_errors_total Počet chyb v PLC čtení",
+            "# TYPE plc_read_errors_total counter",
+            f"plc_read_errors_total {int(last_data.get('plc_read_errors_total', 0))}",
+            "",
+            "# HELP plc_reconnects_total Počet PLC reconnect pokusů",
+            "# TYPE plc_reconnects_total counter",
+            f"plc_reconnects_total {int(last_data.get('plc_reconnects_total', 0))}",
+            "",
+            "# HELP exporter_metrics_scrapes_total Počet scrape dotazů na /metrics",
+            "# TYPE exporter_metrics_scrapes_total counter",
+            f"exporter_metrics_scrapes_total {int(last_data.get('metrics_scrapes_total', 0))}",
+            "",
+            "# HELP exporter_pending_queue_fill_ratio Zaplnění interních front 0-1",
+            "# TYPE exporter_pending_queue_fill_ratio gauge",
+            f'exporter_pending_queue_fill_ratio{{queue="pending_metrics"}} {len(pending_metrics_snapshot) / pending_metrics.maxlen}',
+            f'exporter_pending_queue_fill_ratio{{queue="pending_prostoje"}} {len(pending_prostoje_snapshot) / pending_prostoje.maxlen}',
+            f'exporter_pending_queue_fill_ratio{{queue="pending_excel"}} {len(pending_excel_snapshot) / pending_excel.maxlen}',
+            "",
+        ]
+
+        lines += [
             "# HELP line_br08_response_total BR08 odpovědi podle kódu",
             "# TYPE line_br08_response_total counter",
         ]
@@ -526,6 +574,14 @@ def metrics():
             lines.append(f'target_pocet_boxu{{datum="{d}", timestamp="{t}"}} {prognosa}')
 
         lines.append("")
+
+    scrape_duration = max(0.0, time.time() - scrape_started)
+    lines += [
+        "# HELP exporter_metrics_render_seconds Doba renderu /metrics odpovědi v sekundách",
+        "# TYPE exporter_metrics_render_seconds gauge",
+        f"exporter_metrics_render_seconds {scrape_duration}",
+        "",
+    ]
 
     return Response("\n".join(lines), mimetype="text/plain; version=0.0.4; charset=utf-8")
 

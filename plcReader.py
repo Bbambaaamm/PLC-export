@@ -48,6 +48,8 @@ def connect_to_plc(retry_seconds: float = PLC_RECONNECT_DELAY_SEC) -> snap7.clie
 
     while True:
         try:
+            with last_data_lock:
+                last_data["plc_reconnects_total"] = int(last_data.get("plc_reconnects_total", 0)) + 1
             log.info(f"🔌 Připojuji se k PLC {PLC_IP}...")
             plc.connect(PLC_IP, 0, 1)
 
@@ -144,12 +146,16 @@ def read_plc_data() -> None:
 
                 # Target uložit až teď
                 last_data["target_pocet_boxu"] = target
+                last_data["plc_last_read_timestamp"] = now
+                last_data["plc_poll_count"] = poll_count
 
             time.sleep(PLC_READ_INTERVAL_SEC)
 
         except Exception:
             # stacktrace do logu (aby bylo jasné, co to shodilo)
             log.exception("❌ Chyba čtení PLC (stacktrace):")
+            with last_data_lock:
+                last_data["plc_read_errors_total"] = int(last_data.get("plc_read_errors_total", 0)) + 1
 
             # vynutit reconnect v dalším kole
             try:
