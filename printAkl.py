@@ -1,12 +1,22 @@
 # =====================================================================
 # Soubor   : printAkl.py
-# Účel     : Kompatibilní import pro AKL agregaci
+# Účel     : Agregace AKL Line1 + Line2
 # Autor    : Michal
-# Poznámka : Některé části projektu importují modul `printAkl`.
-#            Implementace je ve `printAklr.py`, proto ji zde pouze
-#            re-exportujeme, aby se předešlo chybě ModuleNotFoundError.
+# Poznámka :
+# - Tento modul slouží jako centrální vstup pro AKL data
+# - Zajišťuje kompatibilitu importů napříč projektem
+# - NENÍ potřeba žádný printAklr.py (ten byl chybný)
 # =====================================================================
 
-from printAklr import read_akl_status
+from akl.line1 import read_akl_line1
+from akl.line2 import read_akl_line2
 
+
+def read_akl_status(data, last_data) -> None:
+    """📡 Načte stav AKL Line1 a Line2 a aktualizuje last_data"""
+    read_akl_line1(data, last_data)
+    read_akl_line2(data, last_data)
+
+
+# kompatibilita pro import *
 __all__ = ["read_akl_status"]
