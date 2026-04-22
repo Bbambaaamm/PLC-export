@@ -24,6 +24,7 @@ from config import (
     SIZE,
     PLC_READ_INTERVAL_SEC,
     PLC_RECONNECT_DELAY_SEC,
+    EXCEL_REFRESH_INTERVAL_SEC,
 )
 
 # Sdílené struktury jsou v prometheus.py – importujeme je sem
@@ -64,9 +65,9 @@ def connect_to_plc(retry_seconds: float = PLC_RECONNECT_DELAY_SEC) -> snap7.clie
         time.sleep(retry_seconds)
 
 
-def load_excel_once() -> Optional[object]:
+def load_excel_data() -> Optional[object]:
     """
-    📂 Načte Excel data jednou při startu.
+    📂 Načte Excel data.
     Vrátí DataFrame (nebo cokoliv, co read_excel_data vrací), nebo None.
     """
     try:
@@ -90,7 +91,8 @@ def read_plc_data() -> None:
     - ošetří Excel target
     """
     plc: Optional[snap7.client.Client] = None
-    df = load_excel_once()
+    df = None
+    last_excel_reload = 0.0
 
     # Heartbeat (důkaz, že smyčka běží i když se hodnoty nemění)
     poll_count = 0
@@ -118,7 +120,17 @@ def read_plc_data() -> None:
                 last_heartbeat = now
                 log.info(f"💓 PLC heartbeat: poll_count={poll_count}")
 
-            # 3) Target z Excelu – MIMO LOCK (aby neblokoval /metrics)
+            # 3) Periodický reload Excelu (např. kvůli změně dne/plánu).
+            if (df is None) or (now - last_excel_reload >= EXCEL_REFRESH_INTERVAL_SEC):
+                new_df = load_excel_data()
+                if new_df is not None:
+                    df = new_df
+                    last_excel_reload = now
+                elif df is None:
+                    # Při úplném startu bez Excelu jen čekáme na další pokus.
+                    last_excel_reload = now
+
+            # 4) Target z Excelu – MIMO LOCK (aby neblokoval /metrics)
             target = []
             if df is not None:
                 try:
@@ -127,7 +139,7 @@ def read_plc_data() -> None:
                     log.error(f"❌ Chyba get_target_pocet_boxu(): {e}")
                     target = []
 
-            # 4) Zpracování dat – LOCK držíme co nejkratší dobu
+            # 5) Zpracování dat – LOCK držíme co nejkratší dobu
             with last_data_lock:
                 # Smartlog (včetně BR08 + prostoje)
                 read_smartlog_data(data, last_data, pending_metrics, pending_prostoje)
