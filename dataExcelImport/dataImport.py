@@ -124,7 +124,9 @@ def get_target_pocet_boxu(df: pd.DataFrame) -> list[tuple[str, float]]:
     target: list[tuple[str, float]] = []
     for row in work.itertuples(index=False):
         datum = row.datum.isoformat() if hasattr(row.datum, "isoformat") else str(row.datum)
-        target.append((datum, float(row.prognose_pakete)))
+        # Počet boxů je celočíselná KPI; Excel často drží podkladovou desetinnou
+        # hodnotu (např. kvůli vzorci), ale v tabulce ji zobrazuje zaokrouhleně.
+        target.append((datum, float(round(float(row.prognose_pakete)))))
 
     return target
 

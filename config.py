@@ -36,3 +36,4 @@ SIZE = _get_env_int("PLC_DB_SIZE", 8122)  # Velikost datablocku
 # 📌 Intervaly
 PLC_READ_INTERVAL_SEC = _get_env_float("PLC_READ_INTERVAL_SEC", 0.5)
 PLC_RECONNECT_DELAY_SEC = _get_env_float("PLC_RECONNECT_DELAY_SEC", 2.0)
+EXCEL_REFRESH_INTERVAL_SEC = _get_env_float("EXCEL_REFRESH_INTERVAL_SEC", 300.0)
