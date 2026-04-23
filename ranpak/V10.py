@@ -41,6 +41,12 @@ def read_V10(data, last_data) -> None:
     # ✅ Načtení status byte pro Ranpak V10
     # -----------------------------------------------------------------
     status = data[28]
+    last_data["V10_status_byte_raw"] = status
+
+    previous_status = last_data.get("V10_status_byte_last", -1)
+    if previous_status != -1 and previous_status != status:
+        last_data["V10_status_changes_total"] = int(last_data.get("V10_status_changes_total", 0)) + 1
+    last_data["V10_status_byte_last"] = status
 
     # -----------------------------------------------------------------
     # ✅ Zpracování všech definovaných bitů

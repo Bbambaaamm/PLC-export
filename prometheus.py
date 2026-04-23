@@ -84,6 +84,12 @@ last_data = {
     "V10_bLidSupplyLowError": 0,
     "V10_bGlueSupplyLowError": 0,
     "V10_safetyReady": 0,
+    "V10_status_byte_raw": 0,
+    "V10_status_byte_last": -1,
+    "V10_status_changes_total": 0,
+    "V10_error_active_seconds_total": 0.0,
+    "V10_bLidSupplyLowError_active_seconds_total": 0.0,
+    "V10_bGlueSupplyLowError_active_seconds_total": 0.0,
 
     # 🚚 Ranpak V20
     "V20_bReadyToReceiveBox": 0,
@@ -93,6 +99,12 @@ last_data = {
     "V20_bLidSupplyLowError": 0,
     "V20_bGlueSupplyLowError": 0,
     "V20_safetyReady": 0,
+    "V20_status_byte_raw": 0,
+    "V20_status_byte_last": -1,
+    "V20_status_changes_total": 0,
+    "V20_error_active_seconds_total": 0.0,
+    "V20_bLidSupplyLowError_active_seconds_total": 0.0,
+    "V20_bGlueSupplyLowError_active_seconds_total": 0.0,
 
     # AKL Line1
     "Line1_SystemReady": 0,
@@ -102,6 +114,8 @@ last_data = {
     "Line1_LabelOut": 0,
     "Line1_RibbonWarning": 0,
     "Line1_RibbonOut": 0,
+    "Line1_LabelOut_active_seconds_total": 0.0,
+    "Line1_RibbonOut_active_seconds_total": 0.0,
 
     # AKL Line2
     "Line2_SystemReady": 0,
@@ -111,6 +125,8 @@ last_data = {
     "Line2_LabelOut": 0,
     "Line2_RibbonWarning": 0,
     "Line2_RibbonOut": 0,
+    "Line2_LabelOut_active_seconds_total": 0.0,
+    "Line2_RibbonOut_active_seconds_total": 0.0,
 
     # 📊 Target Počet Boxů - Načítání z Excelu
     "target_pocet_boxu": collections.deque(maxlen=20),
@@ -121,6 +137,7 @@ last_data = {
     "plc_read_errors_total": 0,
     "plc_reconnects_total": 0,
     "metrics_scrapes_total": 0,
+    "errors_last_sample_timestamp": 0.0,
 }
 
 # 🔄 Fronty (sdílené)
@@ -410,13 +427,17 @@ def metrics():
         # -----------------------------------------------------------------
         simple_keys = [
             "V10_bReadyToReceiveBox", "V10_bReadyToSendBox", "V10_bMachineError",
-            "V10_bLidSupplyLow", "V10_bLidSupplyLowError", "V10_bGlueSupplyLowError", "V10_safetyReady",
+            "V10_bLidSupplyLow", "V10_bLidSupplyLowError", "V10_bGlueSupplyLowError", "V10_safetyReady", "V10_status_byte_raw", "V10_status_changes_total",
+            "V10_error_active_seconds_total", "V10_bLidSupplyLowError_active_seconds_total", "V10_bGlueSupplyLowError_active_seconds_total",
             "V20_bReadyToReceiveBox", "V20_bReadyToSendBox", "V20_bMachineError",
-            "V20_bLidSupplyLow", "V20_bLidSupplyLowError", "V20_bGlueSupplyLowError", "V20_safetyReady",
+            "V20_bLidSupplyLow", "V20_bLidSupplyLowError", "V20_bGlueSupplyLowError", "V20_safetyReady", "V20_status_byte_raw", "V20_status_changes_total",
+            "V20_error_active_seconds_total", "V20_bLidSupplyLowError_active_seconds_total", "V20_bGlueSupplyLowError_active_seconds_total",
             "Line1_SystemReady", "Line1_StartDispatch", "Line1_PassthroughMode",
             "Line1_LabelWarning", "Line1_LabelOut", "Line1_RibbonWarning", "Line1_RibbonOut",
+            "Line1_LabelOut_active_seconds_total", "Line1_RibbonOut_active_seconds_total",
             "Line2_SystemReady", "Line2_StartDispatch", "Line2_PassthroughMode",
             "Line2_LabelWarning", "Line2_LabelOut", "Line2_RibbonWarning", "Line2_RibbonOut",
+            "Line2_LabelOut_active_seconds_total", "Line2_RibbonOut_active_seconds_total",
         ]
 
         for k in simple_keys:
