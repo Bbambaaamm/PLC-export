@@ -39,6 +39,42 @@ from dataExcelImport.dataImport import get_target_pocet_boxu, read_excel_data
 
 log = logging.getLogger("plcReader")
 
+# Metriky doby aktivních chybových stavů:
+# klíč = název exportované metriky, hodnota = zdrojový stavový klíč (0/1)
+ERROR_DURATION_METRICS = {
+    "V10_error_active_seconds_total": "V10_bMachineError",
+    "V20_error_active_seconds_total": "V20_bMachineError",
+    "V10_bLidSupplyLowError_active_seconds_total": "V10_bLidSupplyLowError",
+    "V10_bGlueSupplyLowError_active_seconds_total": "V10_bGlueSupplyLowError",
+    "V20_bLidSupplyLowError_active_seconds_total": "V20_bLidSupplyLowError",
+    "V20_bGlueSupplyLowError_active_seconds_total": "V20_bGlueSupplyLowError",
+    "Line1_LabelOut_active_seconds_total": "Line1_LabelOut",
+    "Line1_RibbonOut_active_seconds_total": "Line1_RibbonOut",
+    "Line2_LabelOut_active_seconds_total": "Line2_LabelOut",
+    "Line2_RibbonOut_active_seconds_total": "Line2_RibbonOut",
+}
+
+
+def update_error_active_durations(now: float) -> None:
+    """
+    ⏱️ Přičte čas do metrik *_active_seconds_total pro všechny sledované chyby.
+    Volat pouze pod last_data_lock.
+    """
+    last_sample = float(last_data.get("errors_last_sample_timestamp", 0.0) or 0.0)
+    if last_sample <= 0:
+        last_data["errors_last_sample_timestamp"] = now
+        return
+
+    delta = max(0.0, now - last_sample)
+    if delta <= 0:
+        return
+
+    for metric_key, state_key in ERROR_DURATION_METRICS.items():
+        if int(last_data.get(state_key, 0)) == 1:
+            last_data[metric_key] = float(last_data.get(metric_key, 0.0)) + delta
+
+    last_data["errors_last_sample_timestamp"] = now
+
 
 def connect_to_plc(retry_seconds: float = PLC_RECONNECT_DELAY_SEC) -> snap7.client.Client:
     """
@@ -155,6 +191,9 @@ def read_plc_data() -> None:
 
                 # AKL
                 read_akl_status(data, last_data)
+
+                # Kumulativní doby aktivních chybových stavů
+                update_error_active_durations(now)
 
                 # Target uložit až teď
                 last_data["target_pocet_boxu"] = target
