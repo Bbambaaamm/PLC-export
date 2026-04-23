@@ -175,6 +175,7 @@ br08_response_counters = collections.Counter()
 br08_direction_counters = collections.Counter()
 prostoje_type_counters = collections.Counter()
 prostoje_station_counters = collections.Counter()
+prostoje_station_duration_counters = collections.Counter()
 
 
 def _escape_label_value(v) -> str:
@@ -262,6 +263,7 @@ def metrics():
             line_kpis["prostoje_duration_seconds_total"] += max(event_key[4], 0)
             prostoje_type_counters[str(event_key[3])] += 1
             prostoje_station_counters[str(event_key[0])] += 1
+            prostoje_station_duration_counters[str(event_key[0])] += max(event_key[4], 0)
 
         while len(_processed_prostoje_set) > _processed_prostoje_fifo.maxlen:
             old = _processed_prostoje_fifo.popleft()
@@ -397,6 +399,20 @@ def metrics():
             f"M2 {last_data['M2']}",
             "",
         ]
+
+        # -----------------------------------------------------------------
+        # ✅ Prostoje - aktuální stav bitů (0/1)
+        # Poznámka:
+        # Tyto metriky umožní v Grafaně zobrazit přímo intervaly prostojů.
+        # -----------------------------------------------------------------
+        for i in range(1, 8):
+            k = f"prostoj{i}"
+            lines += [
+                f"# HELP {k} Aktuální stav prostojového signálu {k}",
+                f"# TYPE {k} gauge",
+                f"{k} {int(last_data.get(k, 0))}",
+                "",
+            ]
 
         # -----------------------------------------------------------------
         # ✅ Bezpečnostní tlačítka Gebhardt
@@ -597,6 +613,16 @@ def metrics():
         ]
         for station, value in sorted(prostoje_station_counters.items()):
             lines.append(f'line_prostoje_station_total{{prostoj="{_escape_label_value(station)}"}} {value}')
+        lines.append("")
+
+        lines += [
+            "# HELP line_prostoje_station_duration_seconds_total Celková délka prostojů podle části linky v sekundách",
+            "# TYPE line_prostoje_station_duration_seconds_total counter",
+        ]
+        for station, value in sorted(prostoje_station_duration_counters.items()):
+            lines.append(
+                f'line_prostoje_station_duration_seconds_total{{prostoj="{_escape_label_value(station)}"}} {value}'
+            )
         lines.append("")
 
         # -----------------------------------------------------------------
