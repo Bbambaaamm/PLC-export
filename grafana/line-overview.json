@@ -2616,7 +2616,2889 @@
           "expr": "((Line1_SystemReady{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
           "legendFormat": "Připravenost",
           "instant": true,
-          "range":…22772 tokens truncated…type": "prometheus",
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((Line1_StartDispatch{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Výdej boxu",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((Line1_LabelWarning{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Etikety · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((Line1_LabelOut{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Etikety · došly",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "((Line1_RibbonWarning{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Páska · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "((Line1_RibbonOut{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Páska · došla",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "G",
+          "expr": "((Line1_PassthroughMode{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Bez etiketování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Připravenost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "gray",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Výdej boxu"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "gray",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Etikety · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Etikety · došly"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Páska · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Páska · došla"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bez etiketování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "purple",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "purple",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "top",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      },
+      "links": [
+        {
+          "title": "Detail zařízení",
+          "url": "/d/plc-machine-detail?var-station=AKL1&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS:percentencode}&var-history_url=${history_url:percentencode}&${__url_time_range}"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "title": "AKL levá · P2",
+      "description": "",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 16,
+        "y": 26,
+        "w": 4,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((Line2_SystemReady{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Připravenost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((Line2_StartDispatch{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Výdej boxu",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((Line2_LabelWarning{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Etikety · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((Line2_LabelOut{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Etikety · došly",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "((Line2_RibbonWarning{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Páska · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "((Line2_RibbonOut{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Páska · došla",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "G",
+          "expr": "((Line2_PassthroughMode{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Bez etiketování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Připravenost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "gray",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Výdej boxu"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "gray",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Etikety · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Etikety · došly"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Páska · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Páska · došla"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bez etiketování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "purple",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "purple",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "top",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      },
+      "links": [
+        {
+          "title": "Detail zařízení",
+          "url": "/d/plc-machine-detail?var-station=AKL2&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS:percentencode}&var-history_url=${history_url:percentencode}&${__url_time_range}"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "title": "Teleskopy",
+      "description": "",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 20,
+        "y": 26,
+        "w": 4,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((pasChod_levy_T1{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "T1 · chod",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((safetyReady_levy_T1{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "T1 · bezpečnost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((pasChod_pravy_T2{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "T2 · chod",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((safetyReady_pravy_T2{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "T2 · bezpečnost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T1 · chod"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "gray",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T1 · bezpečnost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "gray",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T2 · chod"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "gray",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T2 · bezpečnost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "gray",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "top",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      }
+    },
+    {
+      "id": 37,
+      "title": "Smartlog · ESTOP",
+      "description": "",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 6,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((smartlog_estop_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{estop}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Neaktivní",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Aktivní",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      }
+    },
+    {
+      "id": 38,
+      "title": "Gebhardt · ESTOP",
+      "description": "Aktuální signály DB. Zelená = aktivní provozní signál nebo neaktivní chyba; červená = aktivní chyba, oranžová = varování. Bez platných dat se signály nezobrazují jako zdravé.",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 6,
+        "y": 34,
+        "w": 4,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((aktivovanoTlacitko1{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Tlačítko 1",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((aktivovanoTlacitko2{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Tlačítko 2",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((aktivovanoTlacitko3{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Tlačítko 3",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((aktivovanoTlacitko4{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Tlačítko 4",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "((aktivovanoTlacitko5{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Tlačítko 5",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "((aktivovanoTlacitko6{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Tlačítko 6",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tlačítko 1"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tlačítko 2"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tlačítko 3"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tlačítko 4"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tlačítko 5"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tlačítko 6"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Ne",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Ano",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      }
+    },
+    {
+      "id": 41,
+      "title": "Stavy zařízení",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 10,
+        "y": 34,
+        "w": 14,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{station}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "spanNulls": false,
+            "insertNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vaha"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Váha"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Ranpak V10"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Ranpak V20"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL pravá"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL levá"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T1"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Teleskop levý"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T2"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Teleskop pravý"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [],
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.75,
+        "alignValue": "left"
+      }
+    },
+    {
+      "id": 40,
+      "type": "row",
+      "title": "Stavy a materiálové události",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 42,
+      "title": "Ranpak · aktivní chyba stroje",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 6,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((V10_bMachineError{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "V10",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((V20_bMachineError{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "V20",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Bez chyby",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Chyba",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "spanNulls": false,
+            "insertNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [],
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.75,
+        "alignValue": "left"
+      }
+    },
+    {
+      "id": 43,
+      "title": "Materiál · zachycené aktivace stop",
+      "description": "",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 6,
+        "y": 43,
+        "w": 6,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "increase(line_material_activations_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",level=\"stop\"}[${__range_s}s])",
+          "legendFormat": "{{machine}} · {{material}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · vika"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · víka"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · lepidlo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · lepidlo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · etikety"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · etikety"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · paska"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · páska"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · vika"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · víka"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · lepidlo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · lepidlo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · etikety"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · etikety"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · paska"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · páska"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10 · vika"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V10 · víka"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10 · lepidlo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V10 · lepidlo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10 · etikety"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V10 · etikety"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10 · paska"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V10 · páska"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20 · vika"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V20 · víka"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20 · lepidlo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V20 · lepidlo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20 · etikety"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V20 · etikety"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20 · paska"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V20 · páska"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      }
+    },
+    {
+      "id": 44,
+      "title": "AKL · materiálové stavy",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 12,
+        "y": 43,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_material_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\",machine=~\"AKL1|AKL2\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{machine}} · {{material}} · {{level}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Neaktivní",
+                  "color": "blue",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Aktivní",
+                  "color": "orange",
+                  "index": 2
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "spanNulls": false,
+            "insertNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · vika · warning"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · víka · varování"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · vika · stop"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · víka · stop"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · lepidlo · warning"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · lepidlo · varování"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · lepidlo · stop"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · lepidlo · stop"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · etikety · warning"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · etikety · varování"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · etikety · stop"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · etikety · stop"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · paska · warning"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · páska · varování"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · paska · stop"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · páska · stop"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · vika · warning"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · víka · varování"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · vika · stop"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · víka · stop"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · lepidlo · warning"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · lepidlo · varování"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · lepidlo · stop"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · lepidlo · stop"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · etikety · warning"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · etikety · varování"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · etikety · stop"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · etikety · stop"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · paska · warning"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · páska · varování"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · paska · stop"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · páska · stop"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [],
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.75,
+        "alignValue": "left"
+      }
+    },
+    {
+      "id": 45,
+      "title": "Varování → stop · poslední měření",
+      "description": "Vyžaduje předchozí zachycené varování bez mezery v datech. Lepidlo předběžné varování nemá.",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((line_material_warning_lead_seconds{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{machine}} · {{material}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · vika"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · víka"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · lepidlo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · lepidlo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · etikety"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · etikety"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1 · paska"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL1 · páska"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · vika"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · víka"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · lepidlo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · lepidlo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · etikety"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · etikety"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2 · paska"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL2 · páska"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10 · vika"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V10 · víka"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10 · lepidlo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V10 · lepidlo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10 · etikety"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V10 · etikety"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10 · paska"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V10 · páska"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20 · vika"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V20 · víka"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20 · lepidlo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V20 · lepidlo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20 · etikety"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V20 · etikety"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20 · paska"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "V20 · páska"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      }
+    },
+    {
+      "id": 46,
+      "title": "AKL · průchod bez etiketování",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 12,
+        "y": 50,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_label_bypass_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{machine}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           }
         }
