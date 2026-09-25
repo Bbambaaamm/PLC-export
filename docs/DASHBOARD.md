@@ -9,8 +9,8 @@
    a `grafana/machine-detail.json`. Jde o classic JSON schema 39 a nativní panely
    stat, table, timeseries, state-timeline a bargauge. Import do konkrétní
    instalace Grafany je součástí provozního ověření, nikoli CI.
-3. Vyberte Prometheus datasource, job a jedinou instanci. Nastavte proměnnou
-   **Adresa historie** na skutečnou adresu exportéru končící `/history`.
+3. Vyberte Prometheus datasource, job a jedinou instanci. V nastavení dashboardu → Variables nastavte skrytou proměnnou
+   **history_url** na skutečnou adresu exportéru končící `/history`.
    Při přechodu na detail přes kartu zařízení ověřte tuto adresu i v detailu.
 4. Karta zařízení otevře jeho detail se stejným časovým oknem. Rozložení karet
    není schéma fyzického toku. Časové osy používají Europe/Prague.
@@ -85,3 +85,25 @@ sekvenčně číslovanými názvy — migrační tabulka je v `DB2000.md`.
 Zdroje formátů:
 - https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/view-dashboard-json-model/
 - https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+
+## Kompaktní provozní rozložení
+
+Přehled navazuje na uživatelův stávající dashboard z fotografií: Hlavní KPI,
+Výkon a čekání v čase, Aktuální signály strojů, Stavy a materiálové události,
+BR / Plausicheck a kvalita sběru. Horní KPI jsou vysoké jen tři gridové řádky;
+bez celoplošných stavových barev. Počty používají celé hodnoty s oddělovačem
+místo zkrácení na K. Detail a tabulky používají provozní názvy bez technických
+sloupců job/instance/Time/__name__.
+
+Signálové panely jsou v šesti čitelných sloupcích a používají původní exportované bity, vždy s kontrolou
+`up` a `plc_data_valid`. Pozitivní provozní signál je zelený při 1, neaktivní
+šedý; chybový signál je červený při 1. Varování je oranžové, bypass fialový.
+Neaktivní chybové bity mají stav „Ne“, nejde o důkaz běhu celého zařízení.
+Nové panelové odkazy z Ranpak/AKL vedou na detail a zachovávají i adresu historie.
+
+OEE a predikce směny jsou záměrně prázdné s textem „Není definováno“ a vysvětlením
+v popisu panelu. Nedostupnost výpočtu se neinterpretuje jako nula. „Pokrytí dat“
+není dostupnost linky. Součet čekání stanic není sjednocený prostoj linky.
+Žádný parametr délky směny/přestávky nepředstíráme, dokud není zapojen do
+ověřeného výpočtu. Grafana UI import/render byl při vývoji ověřen v 11.6.0
+proti Prometheu 3.2.1 se simulovanými vzorky; živé PLC se tím neověřuje.
