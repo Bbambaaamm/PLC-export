@@ -118,3 +118,14 @@ resetuje procesové čítače. Tento PR sám neprovádí nasazení ani zápis do
 - [Mapa DB a význam metrik](docs/DB2000.md), [import a provoz](docs/DASHBOARD.md).
 - Nové dashboardy nepočítají OEE ani garantované průjezdy bez odpovídajícího
   kontraktu PLC. Soubor DB z roku 2024 je podklad; shodu s nasazeným PLC ověřte.
+
+## Dokončení provozních issue
+
+- #12: [Návrh PLC kontraktu a akceptační scénáře](docs/PLC_CONTRACT_PROPOSAL.md).
+- #13: [Podklady pro topologii, ProLag a směnové KPI](docs/OPERATIONS_INPUTS.md).
+- #14: [Kontrola nasazení a protokol skutečného ověření](docs/COMMISSIONING.md).
+
+`scripts/check_deployment.py` provede read-only kontrolu dvou scrape exportéru
+a vytvoří JSON report bez boxových identifikátorů. Vyžaduje závislosti
+z `requirements-dev.txt`; příklady spuštění jsou v protokolu. Úspěšná
+automatická kontrola nenahrazuje schválení mapy PLC ani akceptaci živé linky.
