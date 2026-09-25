@@ -11,10 +11,10 @@ from smartlog.brPozice import read_br_data  # ✅ Import čtení BR
 from smartlog.bezpecnost import read_bezpecnost_smartlog  # ✅ Import bezpečnosti
 
 
-def read_smartlog_data(data, last_data, pending_metrics, pending_prostoje) -> None:
+def read_smartlog_data(data, last_data, pending_metrics, pending_prostoje, *, wall_time=None, monotonic_time=None) -> None:
     """ 📡 Načte všechny proměnné ze složky smartlog a aktualizuje data """
     read_info(data, last_data)  # ✅ Čtení hlavních hodnot
     read_vaha(data, last_data)  # ✅ Čtení váhy
-    read_prostoje(data, last_data, pending_prostoje)  # ✅ Čtení prostojů
+    read_prostoje(data, last_data, pending_prostoje, wall_time=wall_time, monotonic_time=monotonic_time)
     read_br_data(data, last_data, pending_metrics)  # ✅ Čtení BR08
     read_bezpecnost_smartlog(data, last_data)  # ✅ Čtení bezpečnosti

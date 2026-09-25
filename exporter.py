@@ -11,6 +11,7 @@ import os
 
 from prometheus import start_prometheus
 from plcReader import read_plc_data
+from excelReader import read_excel_targets
 
 
 def setup_logging() -> None:
@@ -41,6 +42,7 @@ if __name__ == "__main__":
 
     log.info("🔄 Spouštím PLC čtení ve vlákně...")
     Thread(target=read_plc_data, name="PLCReader", daemon=True).start()
+    Thread(target=read_excel_targets, name="ExcelReader", daemon=True).start()
 
     log.info("🚀 Spouštím Prometheus exporter (Flask) ...")
     # Poznámka: tohle je exporter /metrics. Není to Prometheus server.

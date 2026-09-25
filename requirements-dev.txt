@@ -1,0 +1,2 @@
+-r requirements.txt
+prometheus-client==0.26.0

@@ -7,7 +7,7 @@
 import time
 import logging
 
-from prometheus import br08_prefix_counters
+from prometheus import br08_prefix_counters, record_br08_event
 
 log = logging.getLogger("smartlog.br08")
 
@@ -130,13 +130,13 @@ def read_br08(data, last_data, pending_metrics, executed_timestamp=None) -> None
             and e.get("smer_vytrideni") == smer_vytrideni
             for e in pending_metrics
         ):
-            pending_metrics.append(
+            record_br08_event(
                 {
                     "box_id": box_id,
                     "timestamp": timestamp,
                     "kod_odpovedi": kod_odpovedi,
                     "smer_vytrideni": smer_vytrideni,
-                }
+                }, pending_metrics
             )
 
         log.info(
@@ -166,13 +166,13 @@ def read_br08(data, last_data, pending_metrics, executed_timestamp=None) -> None
         and entry.get("smer_vytrideni") == smer_vytrideni
         for entry in pending_metrics
     ):
-        pending_metrics.append(
+        record_br08_event(
             {
                 "box_id": box_id,
                 "timestamp": timestamp,
                 "kod_odpovedi": kod_odpovedi,
                 "smer_vytrideni": smer_vytrideni,
-            }
+            }, pending_metrics
         )
 
     prefix = box_id[:2]

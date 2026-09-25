@@ -6,6 +6,7 @@
 
 import time
 import logging
+from prometheus import record_prostoj_event
 
 log = logging.getLogger("smartlog.prostoje")
 
@@ -13,7 +14,7 @@ log = logging.getLogger("smartlog.prostoje")
 prostoj_start_time = {}
 
 
-def read_prostoje(data, last_data, pending_prostoje) -> None:
+def read_prostoje(data, last_data, pending_prostoje, *, wall_time=None, monotonic_time=None) -> None:
     """📡 Načte hodnoty všech prostojů a ukládá je jako jednu metodu."""
 
     # -----------------------------------------------------------------
@@ -27,7 +28,8 @@ def read_prostoje(data, last_data, pending_prostoje) -> None:
         )
         return
 
-    now = time.time()
+    now = time.time() if wall_time is None else wall_time
+    monotonic_now = time.monotonic() if monotonic_time is None else monotonic_time
 
     # -----------------------------------------------------------------
     # ✅ Definice jednotlivých prostojů v byte 62
@@ -54,13 +56,13 @@ def read_prostoje(data, last_data, pending_prostoje) -> None:
 
         # 🟢 Prostoj začal
         if value == 1 and key not in prostoj_start_time:
-            prostoj_start_time[key] = now
+            prostoj_start_time[key] = (now, monotonic_now)
 
         # 🔴 Prostoj skončil
         elif value == 0 and key in prostoj_start_time:
-            start_time = prostoj_start_time.pop(key)
+            start_time, start_monotonic = prostoj_start_time.pop(key)
             end_time = now
-            duration = end_time - start_time
+            duration = max(0.0, monotonic_now - start_monotonic)
 
             # kratší než 10 s ignorujeme
             if duration < 10:
@@ -70,14 +72,14 @@ def read_prostoje(data, last_data, pending_prostoje) -> None:
             else:
                 prostoj_type = "standard"
 
-            pending_prostoje.append(
+            record_prostoj_event(
                 {
                     "prostoj": key,
                     "start_timestamp": int(start_time),
                     "end_timestamp": int(end_time),
                     "duration": int(duration),
                     "type": prostoj_type,
-                }
+                }, pending_prostoje
             )
 
             log.info(
