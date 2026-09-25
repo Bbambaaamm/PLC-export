@@ -135,6 +135,7 @@ last_data = {
 
     # 🩺 Exporter/PLC self-observability
     "plc_last_read_timestamp": 0.0,
+    "plc_last_read_monotonic": None,
     "plc_poll_count": 0,
     "plc_read_errors_total": 0,
     "plc_reconnects_total": 0,
@@ -297,10 +298,11 @@ def metrics():
             if active_target is not None
             else 0.0
         )
-        now_ts = time.time()
         plc_last_read_ts = float(last_data.get("plc_last_read_timestamp", 0.0) or 0.0)
+        last_read_monotonic = last_data.get("plc_last_read_monotonic")
         plc_data_staleness_seconds = (
-            max(0.0, now_ts - plc_last_read_ts) if plc_last_read_ts > 0 else -1.0
+            max(0.0, time.monotonic() - last_read_monotonic)
+            if last_read_monotonic is not None else -1.0
         )
 
         valid = int(bool(last_data["plc_data_valid"]) and
@@ -624,8 +626,6 @@ def metrics():
         for datum, prognosa in sorted(excel_target_by_date.items()):
             d = _escape_label_value(datum)
             lines.append(f'target_pocet_boxu_podle_dne{{datum="{d}"}} {prognosa}')
-            # Kompatibilní alias; čas vzorku je vždy čas scrape, datum je label.
-            lines.append(f'target_pocet_boxu{{datum="{d}"}} {prognosa}')
 
         lines.append("")
 

@@ -45,7 +45,8 @@ autentizaci a poslouchá na všech rozhraních; síťový přístup řeší host
 
 - `plc_data_valid = 1` vyžaduje úplné úspěšné čtení a stáří do
   `PLC_MAX_SAMPLE_GAP_SEC`. Při chybě je 0 ihned, při zastaveném čtení
-  vyprší při scrape. Poslední stavové hodnoty zůstávají dostupné;
+  vyprší při scrape. Stáří se měří monotónním časem a nezávisí na NTP
+  ani ruční změně systémového času. Poslední stavové hodnoty zůstávají dostupné;
   dashboard je musí vyhodnocovat společně s platností dat.
 - `plc_last_read_timestamp`, `plc_data_staleness_seconds`,
   `plc_read_errors_total` a `plc_poll_total` umožňují kontrolu sběru.
@@ -70,8 +71,10 @@ autentizaci a poslouchá na všech rozhraních; síťový přístup řeší host
   zůstává původní fallback na poslední dostupný den do dneška. Datum je
   viditelné v `target_pocet_boxu_aktivni_info`.
 - `target_pocet_boxu_podle_dne{datum="YYYY-MM-DD"}` publikuje snapshot
-  celého plánu. Původní alias `target_pocet_boxu{datum="..."}` je zachován.
-  Obě řady používají čas scrape, nikoli explicitní historický timestamp.
+  celého plánu. Původní datovaný alias `target_pocet_boxu{datum="..."}`
+  je odstraněn, aby prostý dotaz `target_pocet_boxu` vrátil jediný aktuální
+  plán. Panely s datovaným aliasem převeďte na `target_pocet_boxu_podle_dne`.
+  Denní snapshot používá čas scrape, nikoli explicitní historický timestamp.
   Datum plánu filtrujte labelem; time picker zobrazuje historii pozorovaných
   snapshotů a neimportuje zpětně historické hodnoty Excelu do Promethea.
 - Časové a stavové čítače `*_total` mají správně typ `counter`.

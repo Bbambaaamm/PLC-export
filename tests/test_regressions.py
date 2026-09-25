@@ -76,9 +76,13 @@ class ExporterRegressions(unittest.TestCase):
         metrics.last_data['target_pocet_boxu'] = [('2026-09-24', 100), ('2026-09-25', 250)]
         text = self.scrape()
         for day, value in metrics.last_data['target_pocet_boxu']:
-            for name in ('target_pocet_boxu', 'target_pocet_boxu_podle_dne'):
-                line = next(line for line in text.splitlines() if line.startswith(f'{name}{{datum="{day}"}}'))
-                self.assertEqual(line, f'{name}{{datum="{day}"}} {float(value)}')
+            name = 'target_pocet_boxu_podle_dne'
+            line = next(line for line in text.splitlines() if line.startswith(f'{name}{{datum="{day}"}}'))
+            self.assertEqual(line, f'{name}{{datum="{day}"}} {float(value)}')
+        samples = [sample for family in text_string_to_metric_families(text)
+                   for sample in family.samples if sample.name == 'target_pocet_boxu']
+        self.assertEqual(len(samples), 1)
+        self.assertEqual(samples[0].labels, {})
 
     def test_full_year_plan_is_not_truncated_by_event_buffer(self):
         metrics.last_data['target_pocet_boxu'] = [
@@ -163,10 +167,27 @@ class ExporterRegressions(unittest.TestCase):
 
     def test_stalled_reader_health_expires(self):
         self.sample(0, wall=1000)
-        with patch.object(metrics.time, 'time', return_value=1001):
+        with patch.object(metrics.time, 'monotonic', return_value=1):
             self.assertIn('\nplc_data_valid 1\n', self.scrape())
-        with patch.object(metrics.time, 'time', return_value=1100):
+        with patch.object(metrics.time, 'monotonic', return_value=100):
             self.assertIn('\nplc_data_valid 0\n', self.scrape())
+
+    def test_backward_wall_clock_jump_cannot_extend_plc_validity(self):
+        self.sample(100, wall=10000)
+        with patch.object(metrics.time, 'time', return_value=1000), patch.object(
+            metrics.time, 'monotonic', return_value=200
+        ):
+            text = self.scrape()
+        self.assertIn('\nplc_data_valid 0\n', text)
+        self.assertIn('\nplc_data_staleness_seconds 100\n', text)
+        self.assertIn('\nplc_last_read_timestamp 10000.0\n', text)
+
+    def test_forward_wall_clock_jump_does_not_expire_fresh_data(self):
+        self.sample(100, wall=10000)
+        with patch.object(metrics.time, 'time', return_value=100000), patch.object(
+            metrics.time, 'monotonic', return_value=101
+        ):
+            self.assertIn('\nplc_data_valid 1\n', self.scrape())
 
     def test_501_br08_events_count_without_any_scrape(self):
         for i in range(501):

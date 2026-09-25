@@ -124,6 +124,7 @@ def process_sample(data, wall_time: float, monotonic_time: float) -> None:
     read_ranpak_data(data, last_data)
     read_akl_status(data, last_data)
     last_data["plc_last_read_timestamp"] = wall_time
+    last_data["plc_last_read_monotonic"] = monotonic_time
     last_data["plc_poll_count"] += 1
     last_data["plc_data_valid"] = 1
 
