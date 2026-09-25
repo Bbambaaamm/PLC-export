@@ -231,6 +231,11 @@ class DashboardTests(unittest.TestCase):
                     expression = re.sub(r'\$\{[^}]+\}', lambda m: '3600' if m.group(0) == '${__range_s}' else 'test', target['expr'])
                     with self.subTest(panel=panel['title']):
                         promql_parser.parse(expression)
+            for annotation in document['annotations']['list']:
+                expression = re.sub(r'\$\{[^}]+\}', 'test', annotation['expr'])
+                with self.subTest(annotation=annotation['name']):
+                    promql_parser.parse(expression)
+                    self.assertTrue(set(annotation['filter']['ids']).issubset(ids))
 
     def test_alert_expressions(self):
         rules = json.loads((ROOT / 'prometheus_rules' / 'smartlog.rules.yml').read_text())

@@ -61,6 +61,23 @@
           "text": "http://EXPORTER:8000/history",
           "value": "http://EXPORTER:8000/history"
         }
+      },
+      {
+        "name": "incident_station",
+        "label": "Události zařízení",
+        "type": "custom",
+        "query": "Váha : vaha,Ranpak V10 : V10,Ranpak V20 : V20,AKL pravá : AKL1,AKL levá : AKL2,Teleskop levý : T1,Teleskop pravý : T2",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
       }
     ]
   },
@@ -260,8 +277,8 @@
     },
     {
       "id": 5,
-      "title": "BR08 · pozorování",
-      "description": "Počet změn neprázdného BR snapshotu. Není počtem unikátních fyzických průjezdů.",
+      "title": "BR08 · poslední hodina",
+      "description": "Stejný hodinový součet 05 + 10 + 15 + 20 jako hlavní graf. Prvních přibližně 60 minut nebo při nedostatečném pokrytí není dostupný.",
       "type": "stat",
       "gridPos": {
         "x": 12,
@@ -276,7 +293,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(increase(line_br_observations_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[${__range_s}s]))",
+          "expr": "(((sum by(job,instance) (increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=~\"05|10|15|20\"}[1h]))) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -456,13 +473,220 @@
       }
     },
     {
+      "id": 61,
+      "type": "row",
+      "title": "Produkce a události linky",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 60,
+      "title": "Produkce BR08 · klouzavý součet za posledních 60 minut",
+      "description": "Každý bod = přírůstek čítače za předchozích 60 minut. Celkem = 05 + 10 + 15 + 20. Zdroj: původní BR08 čítače s deduplikací BoxID; nejde o garantované fyzické průjezdy. Vyžaduje alespoň 95 % časového pokrytí a platné BR08 vzorky v hodinovém okně. Barevné oblasti jsou pozorovaná čekání a hlášené stavy; souběh s poklesem neprokazuje příčinu.",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(((sum by(job,instance) (increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=~\"05|10|15|20\"}[1h]))) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Celkem",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "(((increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=\"05\"}[1h])) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Boxy 05",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "(((increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=\"10\"}[1h])) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Boxy 10",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "(((increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=\"15\"}[1h])) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Boxy 15",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "(((increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=\"20\"}[1h])) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Boxy 20",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisLabel": "boxů / posledních 60 min",
+            "axisBorderShow": false
+          },
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Celkem"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Boxy 05"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Boxy 10"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Boxy 15"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Boxy 20"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "width": 190
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
       "id": 8,
       "title": "OEE",
       "description": "Chybí definice plánovaného času, ideálního taktu, kvality a rozhodujícího stavu celé linky.",
       "type": "stat",
       "gridPos": {
         "x": 0,
-        "y": 4,
+        "y": 15,
         "w": 4,
         "h": 3
       },
@@ -522,7 +746,7 @@
       "type": "stat",
       "gridPos": {
         "x": 4,
-        "y": 4,
+        "y": 15,
         "w": 4,
         "h": 3
       },
@@ -582,7 +806,7 @@
       "type": "stat",
       "gridPos": {
         "x": 8,
-        "y": 4,
+        "y": 15,
         "w": 4,
         "h": 3
       },
@@ -642,7 +866,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 12,
-        "y": 4,
+        "y": 15,
         "w": 12,
         "h": 3
       },
@@ -790,7 +1014,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 7,
+        "y": 18,
         "w": 24,
         "h": 1
       }
@@ -798,11 +1022,11 @@
     {
       "id": 21,
       "title": "Pozorované tempo · boxů/h",
-      "description": "",
+      "description": "Rychlá odezva: přírůstky senzoru před vraty 38 za 5 minut přepočtené na boxů/h. Jiné místo a jiné okno než hlavní BR08 graf. Události na stejné časové ose umožňují porovnání, nikoli důkaz příčiny.",
       "type": "timeseries",
       "gridPos": {
         "x": 0,
-        "y": 8,
+        "y": 19,
         "w": 12,
         "h": 6
       },
@@ -864,7 +1088,7 @@
       "type": "timeseries",
       "gridPos": {
         "x": 12,
-        "y": 8,
+        "y": 19,
         "w": 6,
         "h": 6
       },
@@ -926,7 +1150,7 @@
       "type": "state-timeline",
       "gridPos": {
         "x": 18,
-        "y": 8,
+        "y": 19,
         "w": 6,
         "h": 6
       },
@@ -1097,7 +1321,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 14,
+        "y": 25,
         "w": 24,
         "h": 1
       }
@@ -1109,7 +1333,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 0,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -1406,7 +1630,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 4,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -1892,7 +2116,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 8,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -2378,7 +2602,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 12,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -2864,7 +3088,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 16,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -3350,7 +3574,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 20,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -3647,7 +3871,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 0,
-        "y": 23,
+        "y": 34,
         "w": 6,
         "h": 8
       },
@@ -3740,7 +3964,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 6,
-        "y": 23,
+        "y": 34,
         "w": 4,
         "h": 8
       },
@@ -4159,7 +4383,7 @@
       "type": "state-timeline",
       "gridPos": {
         "x": 10,
-        "y": 23,
+        "y": 34,
         "w": 14,
         "h": 8
       },
@@ -4365,7 +4589,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 31,
+        "y": 42,
         "w": 24,
         "h": 1
       }
@@ -4377,7 +4601,7 @@
       "type": "state-timeline",
       "gridPos": {
         "x": 0,
-        "y": 32,
+        "y": 43,
         "w": 6,
         "h": 7
       },
@@ -4469,7 +4693,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 6,
-        "y": 32,
+        "y": 43,
         "w": 6,
         "h": 7
       },
@@ -4724,7 +4948,7 @@
       "type": "state-timeline",
       "gridPos": {
         "x": 12,
-        "y": 32,
+        "y": 43,
         "w": 12,
         "h": 7
       },
@@ -5002,7 +5226,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 0,
-        "y": 39,
+        "y": 50,
         "w": 12,
         "h": 6
       },
@@ -5257,7 +5481,7 @@
       "type": "state-timeline",
       "gridPos": {
         "x": 12,
-        "y": 39,
+        "y": 50,
         "w": 12,
         "h": 6
       },
@@ -5343,7 +5567,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 45,
+        "y": 56,
         "w": 24,
         "h": 1
       }
@@ -5355,7 +5579,7 @@
       "type": "table",
       "gridPos": {
         "x": 0,
-        "y": 46,
+        "y": 57,
         "w": 6,
         "h": 7
       },
@@ -5401,17 +5625,17 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "machine": true,
-              "estop": true,
+              "Time": true,
+              "__name__": true,
               "address": true,
+              "condition": true,
+              "estop": true,
               "instance": true,
               "job": true,
+              "level": true,
               "location": true,
-              "material": true,
-              "Time": true,
-              "condition": true,
-              "__name__": true,
-              "level": true
+              "machine": true,
+              "material": true
             },
             "indexByName": {
               "station": 0,
@@ -5432,7 +5656,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 6,
-        "y": 46,
+        "y": 57,
         "w": 6,
         "h": 7
       },
@@ -5494,7 +5718,7 @@
       "type": "table",
       "gridPos": {
         "x": 12,
-        "y": 46,
+        "y": 57,
         "w": 6,
         "h": 7
       },
@@ -5557,17 +5781,17 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "machine": true,
-              "estop": true,
+              "Time": true,
+              "__name__": true,
               "address": true,
+              "condition": true,
+              "estop": true,
               "instance": true,
               "job": true,
+              "level": true,
               "location": true,
-              "material": true,
-              "Time": true,
-              "condition": true,
-              "__name__": true,
-              "level": true
+              "machine": true,
+              "material": true
             },
             "indexByName": {
               "station": 0,
@@ -5588,7 +5812,7 @@
       "type": "stat",
       "gridPos": {
         "x": 18,
-        "y": 46,
+        "y": 57,
         "w": 6,
         "h": 3
       },
@@ -5670,7 +5894,7 @@
       "type": "stat",
       "gridPos": {
         "x": 18,
-        "y": 49,
+        "y": 60,
         "w": 6,
         "h": 4
       },
@@ -5747,7 +5971,7 @@
       "type": "stat",
       "gridPos": {
         "x": 0,
-        "y": 53,
+        "y": 64,
         "w": 8,
         "h": 3
       },
@@ -5807,7 +6031,7 @@
       "type": "stat",
       "gridPos": {
         "x": 8,
-        "y": 53,
+        "y": 64,
         "w": 8,
         "h": 3
       },
@@ -5867,7 +6091,7 @@
       "type": "stat",
       "gridPos": {
         "x": 16,
-        "y": 53,
+        "y": 64,
         "w": 8,
         "h": 3
       },
@@ -5921,6 +6145,7 @@
       }
     }
   ],
+  "graphTooltip": 1,
   "links": [
     {
       "title": "Historie boxů / incidentů",
@@ -5937,6 +6162,127 @@
     }
   ],
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "name": "Čekání",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((line_waiting_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${incident_station:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#FFB357",
+        "titleFormat": "{{station}} · čekání před zařízením",
+        "textFormat": "Prostojový bit DB: obsazený snímač, stojící motor a zapnutý dopravník. Neurčuje příčinu.",
+        "tagKeys": "station",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      },
+      {
+        "name": "Materiál stop",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${incident_station:regex}\"} == 5) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#F2495C",
+        "titleFormat": "{{station}} · Materiál stop",
+        "textFormat": "Zařízení hlásí nedostatek materiálu. Stav dle zobrazovací priority; souběžné signály jsou v detailu.",
+        "tagKeys": "station",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      },
+      {
+        "name": "Chyba stroje",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${incident_station:regex}\"} == 6) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#E02F44",
+        "titleFormat": "{{station}} · Chyba stroje",
+        "textFormat": "Aktivní chybový stav stroje. Stav dle zobrazovací priority; souběžné signály jsou v detailu.",
+        "tagKeys": "station",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      },
+      {
+        "name": "Bezpečnost",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${incident_station:regex}\"} == 7) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#B877D9",
+        "titleFormat": "{{station}} · Bezpečnost",
+        "textFormat": "Bezpečnost zařízení není připravena. Stav dle zobrazovací priority; souběžné signály jsou v detailu.",
+        "tagKeys": "station",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      },
+      {
+        "name": "Výpadek dat",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((1 - plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) or (1 - up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) or (((1 - line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1))",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#8E8E8E",
+        "titleFormat": "Neplatná nebo nedostupná data",
+        "textFormat": "V tomto intervalu nelze stav linky spolehlivě posoudit.",
+        "tagKeys": "",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      }
+    ]
   }
 }

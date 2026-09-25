@@ -29,6 +29,46 @@ přestávek a správné definice dokončeného boxu.
 Generátor: `python scripts/build_dashboards.py`. Generované JSON jsou verzované;
 testy ověřují shodu s generátorem a parsují všechny panelové PromQL výrazy.
 
+## Hlavní graf produkce a prostojových signálů
+
+Graf hned pod KPI ukazuje pět křivek: **Celkem, Boxy 05, 10, 15, 20**.
+Každý bod používá `increase(br08_prefix_total[1h])`, tedy klouzavý přírůstek
+za předchozích 60 minut. Celkem je součet právě těchto čtyř prefixů;
+případné jiné typy nejsou zahrnuty. Zdroj je původní čítač BR08 s deduplikací
+BoxID v paměti exportéru, nikoli čítač změn BR snapshotu. Nejde o záruku
+zachycení každého fyzického průjezdu. Prometheus přírůstky extrapoluje;
+hodnoty v grafu se zobrazují zaokrouhlené na celé boxy.
+
+Barevné oblasti přímo v produkčním grafu a v grafu rychlého tempa zobrazují:
+
+- oranžová: aktivní čekání před konkrétním zařízením,
+- červená: hlášený nedostatek materiálu nebo chyba stroje,
+- fialová: nepřipravená bezpečnost,
+- šedá: neplatná PLC/BR08 data nebo nedostupný scrape target.
+
+Najetí na značku události ukáže zařízení, typ a časový interval. Přepínače
+nad dashboardem zapínají typy událostí, **Události zařízení** filtrují stanice.
+Produkční křivky se filtrem stanic nemění. Grafy mají společný časový kurzor.
+Anotace jsou nativní Prometheus dotazy Grafany s požadovaným krokem 10 s;
+Grafana/datasource může výsledné rozlišení zvětšit. Interval sahá od
+prvního do posledního aktivního vzorku, nikoli mezi přesnými PLC hranami;
+kratší události mohou uniknout. Souběžné události se mohou překrývat.
+Chyba/materiál/bezpečnost vycházejí z prioritního stavu zařízení; kompletní
+souběžné bity zůstávají v detailu. Čekání se vyhodnocuje samostatně.
+
+Hodinový graf vyžaduje alespoň 95 % pokrytí v daném hodinovém okně a platné
+BR08 vzorky. Po startu nemusí být hodinu dostupný, po neplatném BR08 vzorku
+zůstane mezera, dokud vzorek neopustí hodinové okno. Nezjištěnou produkci
+nedoplňujeme nulou. Šedá oblast vyznačuje samotný zjištěný výpadek, nikoli celé
+následující neúplné výpočetní okno. Odstranění targetu z konfigurace Promethea
+se z `up` nepozná; dohled očekávaných targetů musí řešit provozní konfigurace.
+
+Při zastavení klesá hodinový součet postupně, jak starší boxy opouštějí okno.
+Proto zůstává i rychlé tempo za 5 minut. To používá jiný měřicí bod — PLC
+senzor před vraty 38 — a není druhým výpočtem BR08. Obnovený chod nemusí ihned
+zvednout hodinový součet. Současný prostoj a pokles jsou časová souvislost;
+samotný graf neprokazuje příčinu ani počet ztracených boxů.
+
 ## Lokální historie
 
 Exportér spouští nezávislé zapisovací vlákno. `EVENT_DB_PATH` určuje SQLite
