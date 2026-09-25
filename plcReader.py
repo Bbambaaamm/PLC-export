@@ -24,7 +24,7 @@ from config import (
     SIZE,
     PLC_READ_INTERVAL_SEC,
     PLC_RECONNECT_DELAY_SEC,
-    EXCEL_REFRESH_INTERVAL_SEC,
+    PLC_MAX_SAMPLE_GAP_SEC,
 )
 
 # Sdílené struktury jsou v prometheus.py – importujeme je sem
@@ -35,7 +35,7 @@ from prometheus import (
     pending_prostoje,
 )
 
-from dataExcelImport.dataImport import get_target_pocet_boxu, read_excel_data
+from smartlog.prostoje import prostoj_start_time
 
 log = logging.getLogger("plcReader")
 
@@ -57,16 +57,19 @@ ERROR_DURATION_METRICS = {
 
 def update_error_active_durations(now: float) -> None:
     """
+    now je monotónní čas; stav musí být z předchozího vzorku.
     ⏱️ Přičte čas do metrik *_active_seconds_total pro všechny sledované chyby.
     Volat pouze pod last_data_lock.
     """
-    last_sample = float(last_data.get("errors_last_sample_timestamp", 0.0) or 0.0)
-    if last_sample <= 0:
+    last_sample = last_data.get("errors_last_sample_timestamp")
+    if last_sample is None:
         last_data["errors_last_sample_timestamp"] = now
         return
 
-    delta = max(0.0, now - last_sample)
-    if delta <= 0:
+    delta = now - last_sample
+    if delta < 0 or delta > PLC_MAX_SAMPLE_GAP_SEC:
+        prostoj_start_time.clear()
+        last_data["errors_last_sample_timestamp"] = now
         return
 
     for metric_key, state_key in ERROR_DURATION_METRICS.items():
@@ -101,21 +104,28 @@ def connect_to_plc(retry_seconds: float = PLC_RECONNECT_DELAY_SEC) -> snap7.clie
         time.sleep(retry_seconds)
 
 
-def load_excel_data() -> Optional[object]:
-    """
-    📂 Načte Excel data.
-    Vrátí DataFrame (nebo cokoliv, co read_excel_data vrací), nebo None.
-    """
-    try:
-        df = read_excel_data()
-        log.info("📂 Excel načten úspěšně.")
-        return df
-    except FileNotFoundError as e:
-        log.warning(f"⚠️ Excel nenalezen, pokračuji bez něj: {e}")
-        return None
-    except Exception as e:
-        log.error(f"❌ Chyba při načítání Excelu, pokračuji bez něj: {e}")
-        return None
+def invalidate_plc_data() -> None:
+    """Volat pod lockem: neznámý interval nesmí být dobou poruchy."""
+    last_data["plc_data_valid"] = 0
+    last_data["errors_last_sample_timestamp"] = None
+    prostoj_start_time.clear()
+
+
+def process_sample(data, wall_time: float, monotonic_time: float) -> None:
+    """Publikuje pouze úplný DB snapshot. Volat pod last_data_lock."""
+    if data is None or len(data) != SIZE:
+        raise ValueError(f"Incomplete PLC buffer: expected {SIZE} bytes, got {len(data) if data is not None else 0}")
+    # Integrujeme PŘED dekódováním: interval patří poslednímu známému stavu.
+    update_error_active_durations(monotonic_time)
+    read_smartlog_data(data, last_data, pending_metrics, pending_prostoje,
+                       wall_time=wall_time, monotonic_time=monotonic_time)
+    read_gebhardt_data(data, last_data)
+    read_teleskop_data(data, last_data)
+    read_ranpak_data(data, last_data)
+    read_akl_status(data, last_data)
+    last_data["plc_last_read_timestamp"] = wall_time
+    last_data["plc_poll_count"] += 1
+    last_data["plc_data_valid"] = 1
 
 
 def read_plc_data() -> None:
@@ -124,96 +134,36 @@ def read_plc_data() -> None:
     - drží připojení k PLC
     - čte DB blok
     - volá konverzní moduly, které aktualizují last_data a fronty
-    - ošetří Excel target
     """
     plc: Optional[snap7.client.Client] = None
-    df = None
-    last_excel_reload = 0.0
-
-    # Heartbeat (důkaz, že smyčka běží i když se hodnoty nemění)
-    poll_count = 0
-    last_heartbeat = 0.0
-
     while True:
         try:
-            # 1) Připojení / reconnect
             if plc is None or not plc.get_connected():
+                with last_data_lock:
+                    invalidate_plc_data()
                 if plc is not None:
-                    log.warning("⚠️ Spojení s PLC ztraceno, připojuji znovu...")
+                    try:
+                        plc.disconnect()
+                    except Exception:
+                        log.warning("PLC disconnect failed", exc_info=True)
                 plc = connect_to_plc()
 
-            # 2) Čtení dat
             data = plc.db_read(DB_NUMBER, START_OFFSET, SIZE)
-            if not data:
-                log.warning("⚠️ PLC vrátilo prázdná data.")
-                time.sleep(1)
-                continue
-
-            # Heartbeat každých 5 s
-            poll_count += 1
             now = time.time()
-            if now - last_heartbeat >= 5:
-                last_heartbeat = now
-                log.info(f"💓 PLC heartbeat: poll_count={poll_count}")
-
-            # 3) Periodický reload Excelu (např. kvůli změně dne/plánu).
-            if (df is None) or (now - last_excel_reload >= EXCEL_REFRESH_INTERVAL_SEC):
-                new_df = load_excel_data()
-                if new_df is not None:
-                    df = new_df
-                    last_excel_reload = now
-                elif df is None:
-                    # Při úplném startu bez Excelu jen čekáme na další pokus.
-                    last_excel_reload = now
-
-            # 4) Target z Excelu – MIMO LOCK (aby neblokoval /metrics)
-            target = []
-            if df is not None:
-                try:
-                    target = get_target_pocet_boxu(df) or []
-                except Exception as e:
-                    log.error(f"❌ Chyba get_target_pocet_boxu(): {e}")
-                    target = []
-
-            # 5) Zpracování dat – LOCK držíme co nejkratší dobu
+            monotonic_now = time.monotonic()
             with last_data_lock:
-                # Smartlog (včetně BR08 + prostoje)
-                read_smartlog_data(data, last_data, pending_metrics, pending_prostoje)
-
-                # Gebhardt
-                read_gebhardt_data(data, last_data)
-
-                # Teleskopy
-                read_teleskop_data(data, last_data)
-
-                # Ranpak
-                read_ranpak_data(data, last_data)
-
-                # AKL
-                read_akl_status(data, last_data)
-
-                # Kumulativní doby aktivních chybových stavů
-                update_error_active_durations(now)
-
-                # Target uložit až teď
-                last_data["target_pocet_boxu"] = target
-                last_data["plc_last_read_timestamp"] = now
-                last_data["plc_poll_count"] = poll_count
-
+                process_sample(data, now, monotonic_now)
             time.sleep(PLC_READ_INTERVAL_SEC)
 
         except Exception:
-            # stacktrace do logu (aby bylo jasné, co to shodilo)
-            log.exception("❌ Chyba čtení PLC (stacktrace):")
+            log.exception("PLC read/processing failed")
             with last_data_lock:
-                last_data["plc_read_errors_total"] = int(last_data.get("plc_read_errors_total", 0)) + 1
-
-            # vynutit reconnect v dalším kole
+                last_data["plc_read_errors_total"] += 1
+                invalidate_plc_data()
             try:
                 if plc is not None:
                     plc.disconnect()
             except Exception:
-                pass
+                log.warning("PLC disconnect failed", exc_info=True)
             plc = None
-
             time.sleep(PLC_RECONNECT_DELAY_SEC)

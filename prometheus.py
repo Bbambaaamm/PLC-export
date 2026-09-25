@@ -13,6 +13,8 @@ import collections
 import threading
 import logging
 import time
+import os
+from config import PLC_MAX_SAMPLE_GAP_SEC
 import pandas as pd
 
 app = Flask(__name__)
@@ -137,7 +139,11 @@ last_data = {
     "plc_read_errors_total": 0,
     "plc_reconnects_total": 0,
     "metrics_scrapes_total": 0,
-    "errors_last_sample_timestamp": 0.0,
+    "errors_last_sample_timestamp": None,
+    "plc_data_valid": 0,
+    "excel_data_valid": 0,
+    "excel_last_reload_timestamp": 0.0,
+    "excel_read_errors_total": 0,
 }
 
 # 🔄 Fronty (sdílené)
@@ -145,7 +151,6 @@ last_data = {
 # Tyto fronty jsou schválně bounded, aby nerostly donekonečna.
 pending_metrics = collections.deque(maxlen=500)     # BR08 validní události
 pending_prostoje = collections.deque(maxlen=500)    # ukončené prostoje
-pending_excel = collections.deque(maxlen=200)       # excel řádky
 
 # 📦 BR08 prefix countery
 # Slouží pro přesné počítání validních průjezdů podle prefixu box_id
@@ -156,14 +161,6 @@ br08_prefix_counters = {
     "15": 0,
     "20": 0,
 }
-
-# Bounded “processed dates” – aby to nerostlo donekonečna
-_processed_dates_set = set()
-_processed_dates_fifo = collections.deque(maxlen=400)
-_processed_br08_set = set()
-_processed_br08_fifo = collections.deque(maxlen=5000)
-_processed_prostoje_set = set()
-_processed_prostoje_fifo = collections.deque(maxlen=3000)
 
 # 📊 Nízkokardinalitní agregace pro dashboard/KPI
 line_kpis = {
@@ -176,6 +173,26 @@ br08_direction_counters = collections.Counter()
 prostoje_type_counters = collections.Counter()
 prostoje_station_counters = collections.Counter()
 prostoje_station_duration_counters = collections.Counter()
+
+
+def record_br08_event(entry, queue=None) -> None:
+    """Volat pod last_data_lock; agregace je nezávislá na HTTP scrape."""
+    line_kpis["br08_events_total"] += 1
+    br08_response_counters[str(int(entry.get("kod_odpovedi", 0)))] += 1
+    br08_direction_counters[str(int(entry.get("smer_vytrideni", 0)))] += 1
+    (pending_metrics if queue is None else queue).append(entry)
+
+
+def record_prostoj_event(entry, queue=None) -> None:
+    """Agreguje ukončenou událost před případným vytěsněním z bufferu."""
+    duration = max(int(entry.get("duration", 0)), 0)
+    station = str(entry.get("prostoj"))
+    line_kpis["prostoje_events_total"] += 1
+    line_kpis["prostoje_duration_seconds_total"] += duration
+    prostoje_type_counters[str(entry.get("type"))] += 1
+    prostoje_station_counters[station] += 1
+    prostoje_station_duration_counters[station] += duration
+    (pending_prostoje if queue is None else queue).append(entry)
 
 
 def _escape_label_value(v) -> str:
@@ -204,70 +221,16 @@ def metrics():
     with last_data_lock:
         last_data["metrics_scrapes_total"] += 1
         # snapshoty sdílených struktur
-        pending_prostoje_snapshot = list(pending_prostoje)
-        pending_metrics_snapshot = list(pending_metrics)
+        export_details = os.getenv("EXPORT_EVENT_DETAILS", "1") == "1"
+        pending_prostoje_snapshot = list(pending_prostoje) if export_details else []
+        pending_metrics_snapshot = list(pending_metrics) if export_details else []
         br08_prefix_counters_snapshot = dict(br08_prefix_counters)
 
-        # 📊 Excel targety – doplnění jen nových datumů
-        for datum, prognosa in last_data["target_pocet_boxu"]:
-            if datum not in _processed_dates_set:
-                pending_excel.append({"datum": datum, "prognosa": prognosa})
-                _processed_dates_set.add(datum)
-                _processed_dates_fifo.append(datum)
-
-        # evikce ze setu
-        while len(_processed_dates_set) > _processed_dates_fifo.maxlen:
-            old = _processed_dates_fifo.popleft()
-            _processed_dates_set.discard(old)
-
-        pending_excel_snapshot = list(pending_excel)
-
-        # -----------------------------------------------------------------
-        # ✅ Nízkokardinalitní KPI agregace z eventů
-        # -----------------------------------------------------------------
-        for entry in pending_metrics_snapshot:
-            event_key = (
-                entry.get("box_id"),
-                int(entry.get("timestamp", 0)),
-                int(entry.get("kod_odpovedi", 0)),
-                int(entry.get("smer_vytrideni", 0)),
-            )
-            if event_key in _processed_br08_set:
-                continue
-
-            _processed_br08_set.add(event_key)
-            _processed_br08_fifo.append(event_key)
-            line_kpis["br08_events_total"] += 1
-
-            br08_response_counters[str(event_key[2])] += 1
-            br08_direction_counters[str(event_key[3])] += 1
-
-        while len(_processed_br08_set) > _processed_br08_fifo.maxlen:
-            old = _processed_br08_fifo.popleft()
-            _processed_br08_set.discard(old)
-
-        for entry in pending_prostoje_snapshot:
-            event_key = (
-                entry.get("prostoj"),
-                int(entry.get("start_timestamp", 0)),
-                int(entry.get("end_timestamp", 0)),
-                entry.get("type"),
-                int(entry.get("duration", 0)),
-            )
-            if event_key in _processed_prostoje_set:
-                continue
-
-            _processed_prostoje_set.add(event_key)
-            _processed_prostoje_fifo.append(event_key)
-            line_kpis["prostoje_events_total"] += 1
-            line_kpis["prostoje_duration_seconds_total"] += max(event_key[4], 0)
-            prostoje_type_counters[str(event_key[3])] += 1
-            prostoje_station_counters[str(event_key[0])] += 1
-            prostoje_station_duration_counters[str(event_key[0])] += max(event_key[4], 0)
-
-        while len(_processed_prostoje_set) > _processed_prostoje_fifo.maxlen:
-            old = _processed_prostoje_fifo.popleft()
-            _processed_prostoje_set.discard(old)
+        # Kompletní aktuální plán: změny i odstranění řádků se promítnou ihned.
+        pending_excel_snapshot = [
+            {"datum": datum, "prognosa": prognosa}
+            for datum, prognosa in last_data["target_pocet_boxu"]
+        ]
 
         # -----------------------------------------------------------------
         # ✅ KPI snapshoty pro line dashboard
@@ -339,6 +302,16 @@ def metrics():
         plc_data_staleness_seconds = (
             max(0.0, now_ts - plc_last_read_ts) if plc_last_read_ts > 0 else -1.0
         )
+
+        valid = int(bool(last_data["plc_data_valid"]) and
+                    0 <= plc_data_staleness_seconds <= PLC_MAX_SAMPLE_GAP_SEC)
+        for key, value, metric_type in [
+            ("plc_data_valid", valid, "gauge"),
+            ("excel_data_valid", last_data["excel_data_valid"], "gauge"),
+            ("excel_last_reload_timestamp", last_data["excel_last_reload_timestamp"], "gauge"),
+            ("excel_read_errors_total", last_data["excel_read_errors_total"], "counter"),
+        ]:
+            lines += [f"# HELP {key} Exporter source health", f"# TYPE {key} {metric_type}", f"{key} {value}", ""]
 
         # -----------------------------------------------------------------
         # ✅ Základní gauge metriky
@@ -459,7 +432,7 @@ def metrics():
         for k in simple_keys:
             lines += [
                 f"# HELP {k} PLC stav {k}",
-                f"# TYPE {k} gauge",
+                f"# TYPE {k} {'counter' if k.endswith('_total') else 'gauge'}",
                 f"{k} {last_data[k]}",
                 "",
             ]
@@ -577,9 +550,8 @@ def metrics():
             "",
             "# HELP exporter_pending_queue_fill_ratio Zaplnění interních front 0-1",
             "# TYPE exporter_pending_queue_fill_ratio gauge",
-            f'exporter_pending_queue_fill_ratio{{queue="pending_metrics"}} {len(pending_metrics_snapshot) / pending_metrics.maxlen}',
-            f'exporter_pending_queue_fill_ratio{{queue="pending_prostoje"}} {len(pending_prostoje_snapshot) / pending_prostoje.maxlen}',
-            f'exporter_pending_queue_fill_ratio{{queue="pending_excel"}} {len(pending_excel_snapshot) / pending_excel.maxlen}',
+            f'exporter_pending_queue_fill_ratio{{queue="pending_metrics"}} {len(pending_metrics) / pending_metrics.maxlen}',
+            f'exporter_pending_queue_fill_ratio{{queue="pending_prostoje"}} {len(pending_prostoje) / pending_prostoje.maxlen}',
             "",
         ]
 
@@ -629,22 +601,11 @@ def metrics():
         # ✅ Target počet boxů z Excelu
         # -----------------------------------------------------------------
         lines += [
-            "# HELP target_pocet_boxu Prognóza počtu boxů (timestamp je datum z Excelu)",
+            "# HELP target_pocet_boxu Aktuální prognóza počtu boxů",
             "# TYPE target_pocet_boxu gauge",
             f"target_pocet_boxu {active_target if active_target is not None else 'NaN'}",
             "",
         ]
-        for entry in pending_excel_snapshot:
-            datum = entry["datum"]
-            prognosa = entry["prognosa"]
-            parsed_date = pd.to_datetime(datum, errors="coerce")
-            if pd.isna(parsed_date):
-                continue
-
-            # Prometheus timestamp je v milisekundách.
-            # Díky tomu Grafana time picker filtruje podle reálného dne.
-            sample_ts_ms = int(parsed_date.timestamp() * 1000)
-
         lines += [
             "# HELP target_pocet_boxu_aktivni_info Aktivní target počtu boxů s informací o datu",
             "# TYPE target_pocet_boxu_aktivni_info gauge",
@@ -662,7 +623,9 @@ def metrics():
         ]
         for datum, prognosa in sorted(excel_target_by_date.items()):
             d = _escape_label_value(datum)
-            lines.append(f'target_pocet_boxu{{datum="{d}"}} {prognosa} {sample_ts_ms}')
+            lines.append(f'target_pocet_boxu_podle_dne{{datum="{d}"}} {prognosa}')
+            # Kompatibilní alias; čas vzorku je vždy čas scrape, datum je label.
+            lines.append(f'target_pocet_boxu{{datum="{d}"}} {prognosa}')
 
         lines.append("")
 
