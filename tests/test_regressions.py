@@ -192,7 +192,7 @@ class ExporterRegressions(unittest.TestCase):
     def test_501_br08_events_count_without_any_scrape(self):
         for i in range(501):
             data = bytearray(SIZE)
-            data[3534:3546] = f'10{i:010d}'.encode('ascii')
+            data[3534:3546] = bytes([10, 10]) + f'10{i:08d}'.encode('ascii')
             data[3649] = 1
             data[3650] = 1
             read_br08(data, metrics.last_data, metrics.pending_metrics)

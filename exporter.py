@@ -8,10 +8,12 @@
 from threading import Thread
 import logging
 import os
+import atexit
 
 from prometheus import start_prometheus
 from plcReader import read_plc_data
 from excelReader import read_excel_targets
+from eventJournal import journal
 
 
 def setup_logging() -> None:
@@ -34,6 +36,8 @@ def setup_logging() -> None:
 
 if __name__ == "__main__":
     setup_logging()
+    journal.start()
+    atexit.register(journal.stop)
     log = logging.getLogger("exporter")
 
     log.info("-----------------------------------")

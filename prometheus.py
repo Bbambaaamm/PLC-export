@@ -16,8 +16,12 @@ import time
 import os
 from config import PLC_MAX_SAMPLE_GAP_SEC
 import pandas as pd
+from lineMonitor import monitor
+from eventJournal import journal
+from history import history_blueprint
 
 app = Flask(__name__)
+app.register_blueprint(history_blueprint)
 log = logging.getLogger("prometheus")
 
 # 🔒 Lock pro sdílené struktury (PLC vlákno + Flask requesty)
@@ -66,17 +70,9 @@ last_data = {
     "aktivovanoTlacitko5": 0,
     "aktivovanoTlacitko6": 0,
 
-    # 🛑 Bezpečnostní tlačítka Smartlog (ESTOP)
-    "aktivovanoTlacitko_ES_TOP1": 0,
-    "aktivovanoTlacitko_ES_TOP2": 0,
-    "aktivovanoTlacitko_ES_TOP3": 0,
-    "aktivovanoTlacitko_ES_TOP4": 0,
-    "aktivovanoTlacitko_ES_TOP5": 0,
-    "aktivovanoTlacitko_ES_TOP6": 0,
-    "aktivovanoTlacitko_ES_TOP7": 0,
-    "aktivovanoTlacitko_ES_TOP8": 0,
-    "aktivovanoTlacitko_ES_TOP9": 0,
-    "aktivovanoTlacitko_ES_TOP10": 0,
+    # Names and positions are defined by DB2000, not sequential numbering.
+    "smartlog_estops": {},
+    "novy_box": 0,
 
     # 🚚 Ranpak V10
     "V10_bReadyToReceiveBox": 0,
@@ -287,6 +283,7 @@ def metrics():
             if eligible_dates:
                 active_target_date = max(eligible_dates)
 
+        active_target_is_today = int(active_target_date == today_local)
         active_target = (
             excel_target_by_date.get(active_target_date)
             if active_target_date is not None
@@ -314,6 +311,13 @@ def metrics():
             ("excel_read_errors_total", last_data["excel_read_errors_total"], "counter"),
         ]:
             lines += [f"# HELP {key} Exporter source health", f"# TYPE {key} {metric_type}", f"{key} {value}", ""]
+
+        lines += ["# HELP excel_active_target_is_today Selected target matches today", "# TYPE excel_active_target_is_today gauge", f"excel_active_target_is_today {active_target_is_today}", ""]
+        lines.extend(monitor.render(last_data, valid, time.monotonic()))
+        for key, value in journal.health().items():
+            metric_type = "counter" if key.endswith("_total") else "gauge"
+            name = "event_journal_" + key
+            lines += [f"# HELP {name} Observation archive health", f"# TYPE {name} {metric_type}", f"{name} {value}", ""]
 
         # -----------------------------------------------------------------
         # ✅ Základní gauge metriky
@@ -394,18 +398,6 @@ def metrics():
         # -----------------------------------------------------------------
         for i in range(1, 7):
             k = f"aktivovanoTlacitko{i}"
-            lines += [
-                f"# HELP {k} Indikuje stav bezpečnostního tlačítka {i}",
-                f"# TYPE {k} gauge",
-                f"{k} {last_data[k]}",
-                "",
-            ]
-
-        # -----------------------------------------------------------------
-        # ✅ Bezpečnostní tlačítka Smartlog
-        # -----------------------------------------------------------------
-        for i in range(1, 11):
-            k = f"aktivovanoTlacitko_ES_TOP{i}"
             lines += [
                 f"# HELP {k} Indikuje stav bezpečnostního tlačítka {i}",
                 f"# TYPE {k} gauge",

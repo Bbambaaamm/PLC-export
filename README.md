@@ -2,7 +2,7 @@
 
 Read-only sběr DB přes Snap7 a export metrik na `/metrics` (port 8000).
 Spouštěcí bod je `python exporter.py`: jedno PLC vlákno, jedno Excel vlákno
-a HTTP obsluha. Samotný import Flask aplikace PLC ani Excel sběr nespustí.
+vlákno archivu SQLite a HTTP obsluha. Samotný import Flask aplikace PLC ani Excel sběr nespustí.
 
 ## Instalace a ověření
 
@@ -27,13 +27,14 @@ mapu DB a přístup služby k plánovacímu souboru ve skutečném prostředí.
 | `PLC_IP` | Adresa PLC; při nasazení ji nastavte explicitně. |
 | `PLC_DB_NUMBER` | DB, výchozí 2000. |
 | `PLC_START_OFFSET` | Musí být 0: dekodéry používají absolutní offsety DB. |
-| `PLC_DB_SIZE` | Výchozí 8122 B, nejméně 3651 B. Odpověď musí přesně odpovídat nakonfigurované velikosti. |
+| `PLC_DB_SIZE` | Výchozí 8122 B, nejméně 7077 B. Odpověď musí přesně odpovídat nakonfigurované velikosti. |
 | `PLC_READ_INTERVAL_SEC` | Pauza po čtení, výchozí 0,5 s. |
 | `PLC_RECONNECT_DELAY_SEC` | Pauza po chybě, výchozí 2 s. |
 | `PLC_MAX_SAMPLE_GAP_SEC` | Největší platná mezera mezi vzorky; výchozí maximum z 5 s a trojnásobku čtecího intervalu. |
 | `KPI_EXCEL_PATH` | Soubor nebo složka s plánem. Nastavte cestu dostupnou účtu služby. |
 | `EXCEL_REFRESH_INTERVAL_SEC` | Pauza po každém pokusu o načtení Excelu, výchozí 300 s. |
 | `EXPORT_EVENT_DETAILS` | `1` zachová původní detailní řady `br08_info` a `prostoje_info`; `0` je vypne a ponechá agregace. |
+| `EVENT_DB_PATH` | Cesta k archivu SQLite; výchozí `var/observations.sqlite3`. |
 | `LOG_LEVEL` | Výchozí INFO. |
 
 Zachovány jsou původní síťové výchozí hodnoty kvůli kompatibilitě.
@@ -105,3 +106,15 @@ konfigurací. Ověřte `/metrics`, `plc_data_valid`, aktualizaci PLC timestampu,
 Excel health a plán. Ověřte i chování při řízeně simulovaném výpadku zdroje.
 Při návratu nasaďte předchozí commit a jeho prostředí; restart v obou směrech
 resetuje procesové čítače. Tento PR sám neprovádí nasazení ani zápis do PLC.
+
+## Dashboard podle databloku DB2000
+
+- [Přehled linky](grafana/line-overview.json) a [detail zařízení](grafana/machine-detail.json)
+  jsou připravené pro import do Grafany bez externích panelových pluginů.
+- Sedm BR pozic, opravené S7 STRING, skutečné identifikátory ESTOP,
+  materiálové stavy, bypass AKL a časy pozorovaného čekání.
+- `/history` a `/api/events` umožňují hledat pozorování podle BoxID a času.
+  BoxID ani ShippingLabel nejsou labely nových metrik.
+- [Mapa DB a význam metrik](docs/DB2000.md), [import a provoz](docs/DASHBOARD.md).
+- Nové dashboardy nepočítají OEE ani garantované průjezdy bez odpovídajícího
+  kontraktu PLC. Soubor DB z roku 2024 je podklad; shodu s nasazeným PLC ověřte.
