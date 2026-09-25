@@ -6,6 +6,7 @@
 
 import time
 import logging
+from db2000 import s7_string
 
 from prometheus import br08_prefix_counters, record_br08_event
 
@@ -29,7 +30,7 @@ def read_br08(data, last_data, pending_metrics, executed_timestamp=None) -> None
     # ✅ BoxID
     # -----------------------------------------------------------------
     try:
-        box_id = data[3534:3546].decode("ascii", errors="ignore").replace("\x00", "").strip()
+        box_id = s7_string(data, 3534, 10)
     except Exception as e:
         log.warning(f"⚠️ BR08: chyba při dekódování box_id: {e}")
         return

@@ -36,6 +36,7 @@ from prometheus import (
 )
 
 from smartlog.prostoje import prostoj_start_time
+from lineMonitor import monitor
 
 log = logging.getLogger("plcReader")
 
@@ -109,6 +110,7 @@ def invalidate_plc_data() -> None:
     last_data["plc_data_valid"] = 0
     last_data["errors_last_sample_timestamp"] = None
     prostoj_start_time.clear()
+    monitor.invalidate()
 
 
 def process_sample(data, wall_time: float, monotonic_time: float) -> None:
@@ -123,6 +125,7 @@ def process_sample(data, wall_time: float, monotonic_time: float) -> None:
     read_teleskop_data(data, last_data)
     read_ranpak_data(data, last_data)
     read_akl_status(data, last_data)
+    monitor.observe(data, last_data, wall_time, monotonic_time)
     last_data["plc_last_read_timestamp"] = wall_time
     last_data["plc_last_read_monotonic"] = monotonic_time
     last_data["plc_poll_count"] += 1

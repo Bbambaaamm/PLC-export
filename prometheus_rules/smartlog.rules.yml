@@ -1,0 +1,93 @@
+{
+  "groups": [
+    {
+      "name": "smartlog",
+      "rules": [
+        {
+          "alert": "SmartlogExporterUnavailable",
+          "expr": "up{job=\"plc-export\"} == 0",
+          "for": "1m",
+          "labels": {
+            "severity": "critical"
+          },
+          "annotations": {
+            "summary": "Exportér PLC není dostupný",
+            "description": "Prometheus nedokáže načíst endpoint {{ $labels.instance }}. Ověřte službu a síť."
+          }
+        },
+        {
+          "alert": "SmartlogPLCDataInvalid",
+          "expr": "(plc_data_valid == 0) and on(job,instance) (up == 1)",
+          "for": "30s",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "PLC data nejsou platná",
+            "description": "Ověřte spojení, délku DB a stáří posledního čtení. Poslední hodnoty nejsou potvrzeným aktuálním stavem."
+          }
+        },
+        {
+          "alert": "SmartlogBRDecodeInvalid",
+          "expr": "(line_br_data_valid == 0) and on(job,instance) (plc_data_valid == 1) and on(job,instance) (up == 1)",
+          "for": "30s",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "Neplatný formát BR dat",
+            "description": "{{ $labels.station }}: ověřte hlavičku STRING a aktuální mapu DB."
+          }
+        },
+        {
+          "alert": "SmartlogArchiveUnavailable",
+          "expr": "(event_journal_healthy == 0) and on(job,instance) (up == 1)",
+          "for": "1m",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "Archiv pozorování nezapisuje",
+            "description": "Ověřte práva a volné místo pro SQLite. Sběr PLC pokračuje, fronta je omezená."
+          }
+        },
+        {
+          "alert": "SmartlogArchiveDropped",
+          "expr": "increase(event_journal_dropped_total[5m]) > 0",
+          "for": "0s",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "Archiv ztratil pozorování",
+            "description": "Fronta byla plná. Historie v tomto intervalu není úplná."
+          }
+        },
+        {
+          "alert": "SmartlogMaterialStop",
+          "expr": "(line_material_active{level=\"stop\"} == 1) and on(job,instance) (plc_data_valid == 1) and on(job,instance) (up == 1)",
+          "for": "30s",
+          "labels": {
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "Zařízení hlásí nedostatek materiálu",
+            "description": "{{ $labels.machine }} / {{ $labels.material }}. Jde o stavový bit, nikoli automatický důkaz příčiny čekání."
+          }
+        },
+        {
+          "alert": "SmartlogCounterDiscontinuity",
+          "expr": "increase(line_box_counter_discontinuities_total[5m]) > 0",
+          "for": "0s",
+          "labels": {
+            "severity": "info"
+          },
+          "annotations": {
+            "summary": "Změna kontinuity denního počítadla",
+            "description": "Půlnoční reset může být očekávaný. Ověřte také přetečení typu Int; záporný denní počet se nezobrazuje jako platný KPI."
+          }
+        }
+      ]
+    }
+  ]
+}

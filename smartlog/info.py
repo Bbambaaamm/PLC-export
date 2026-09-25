@@ -31,6 +31,8 @@ def read_info(data, last_data) -> None:
     # ✅ Čtení dnes_pocet_boxu (INT / 2B, big-endian)
     # -----------------------------------------------------------------
     dnes_pocet_boxu = struct.unpack(">h", data[58:60])[0]
+    if len(data) > 60:
+        last_data["novy_box"] = int(bool(data[60] & 1))
 
     if dnes_pocet_boxu != last_data.get("dnes_pocet_boxu", -1):
         last_data["dnes_pocet_boxu"] = dnes_pocet_boxu

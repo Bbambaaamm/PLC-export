@@ -1,0 +1,2128 @@
+{
+  "uid": "plc-line-overview",
+  "title": "Smartlog · přehled linky",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "Europe/Prague",
+  "tags": [
+    "PLC",
+    "DB2000",
+    "Smartlog"
+  ],
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "label": "Zdroj dat",
+        "type": "datasource",
+        "query": "prometheus",
+        "refresh": 1
+      },
+      {
+        "name": "job",
+        "label": "Exportér",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "query": "label_values(plc_data_valid, job)",
+        "refresh": 1,
+        "multi": false,
+        "includeAll": false
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "query": "label_values(plc_data_valid{job=~\"${job:regex}\"}, instance)",
+        "refresh": 1,
+        "multi": false,
+        "includeAll": false
+      },
+      {
+        "name": "history_url",
+        "label": "Adresa historie",
+        "type": "textbox",
+        "query": "http://EXPORTER:8000/history",
+        "current": {
+          "text": "http://EXPORTER:8000/history",
+          "value": "http://EXPORTER:8000/history"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "SMARTLOG · přehled provozu",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Pozorované stavy linky** · Čekající box není automaticky porucha. Připravenost Ranpaku nepotvrzuje pracovní cyklus. Neznámé stavy zůstávají šedé. Rozložení karet neurčuje fyzické propojení zařízení."
+      }
+    },
+    {
+      "id": 2,
+      "title": "Platnost PLC dat",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} * on(job,instance) plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Data nejsou platná",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Data aktuální",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Dnes · senzor před vraty 38",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 3,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((dnes_pocet_boxu{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} and on(job,instance) (line_daily_box_count_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Pozorované tempo · boxů/h",
+      "description": "Přírůstky PLC počítadla za 5 min. Zobrazeno jen při >=90% časovém pokrytí; nejde o potvrzenou expedici.",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((rate(line_observed_box_increments_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[5m]) * 3600 and on(job,instance) (rate(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[5m]) >= 0.9)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Plnění dnešního plánu",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 3,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((100 * dnes_pocet_boxu{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} / on(job,instance) (target_pocet_boxu{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} > 0) and on(job,instance) (excel_active_target_is_today{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1) and on(job,instance) (excel_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1) and on(job,instance) (line_daily_box_count_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 10,
+      "title": "Váha",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"vaha\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Nepřipraveno / bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Detail zařízení",
+              "url": "/d/plc-machine-detail?var-station=vaha&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS}&${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "title": "Ranpak V10",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 8,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"V10\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Nepřipraveno / bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Detail zařízení",
+              "url": "/d/plc-machine-detail?var-station=V10&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS}&${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 12,
+      "title": "Ranpak V20",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"V20\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Nepřipraveno / bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Detail zařízení",
+              "url": "/d/plc-machine-detail?var-station=V20&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS}&${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 13,
+      "title": "AKL pravá",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 8,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"AKL1\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Nepřipraveno / bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Detail zařízení",
+              "url": "/d/plc-machine-detail?var-station=AKL1&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS}&${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 14,
+      "title": "AKL levá",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"AKL2\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Nepřipraveno / bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Detail zařízení",
+              "url": "/d/plc-machine-detail?var-station=AKL2&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS}&${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 15,
+      "title": "Teleskop levý",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 13,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"T1\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Nepřipraveno / bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Detail zařízení",
+              "url": "/d/plc-machine-detail?var-station=T1&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS}&${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 16,
+      "title": "Teleskop pravý",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"T2\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Nepřipraveno / bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Detail zařízení",
+              "url": "/d/plc-machine-detail?var-station=T2&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS}&${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 17,
+      "title": "Archiv událostí",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 13,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(event_journal_healthy{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Archiv nedostupný",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Archiv zapisuje",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 20,
+      "title": "Stavy zařízení v čase",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{station}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Nepřipraveno / bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "blue",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 3
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 4
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 5
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 6
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 7
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 8
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 9
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.8
+      }
+    },
+    {
+      "id": 21,
+      "title": "Čekání před zařízeními · měřené sekundy",
+      "description": "Součet po stanicích; překryvy nejsou prostojem celé linky. Zahrnuje i čekání kratší než 10 s.",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "increase(line_waiting_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[${__range_s}s])",
+          "legendFormat": "{{station}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "id": 22,
+      "title": "Čekání se současným chybovým stavem",
+      "description": "Doložený souběh signálů. Neprokazuje kořenovou příčinu.",
+      "type": "table",
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((line_waiting_coincidence{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "title": "Materiál · varování a zastavení",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_material_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{machine}} · {{material}} · {{level}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Není aktivní",
+                  "color": "blue",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Aktivní",
+                  "color": "orange",
+                  "index": 2
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.8
+      }
+    },
+    {
+      "id": 24,
+      "title": "Poslední změřený čas varování → zastavení",
+      "description": "Pouze při zachyceném předchozím varování bez mezery v datech. Lepidlo nemá v DB předběžný warning.",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((line_material_warning_lead_seconds{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{machine}} · {{material}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "id": 25,
+      "title": "Bezpečnostní tlačítka · skutečná označení",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(smartlog_estop_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{estop}} · {{location}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Není aktivní",
+                  "color": "blue",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Aktivní",
+                  "color": "orange",
+                  "index": 2
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.8
+      }
+    },
+    {
+      "id": 26,
+      "title": "AKL · průchod bez etiketování",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 12,
+        "y": 43,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_label_bypass_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "{{machine}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Bypass vypnutý",
+                  "color": "blue",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Bez etiketování",
+                  "color": "purple",
+                  "index": 2
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.8
+      }
+    },
+    {
+      "id": 30,
+      "title": "ProLag / Plausicheck",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 52,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "200 = OK; 4xx = chybová odpověď podle dokumentace. Konkrétní důvody vyžadují číselník ProLag. Pozorování BR nejsou garantovanými fyzickými průjezdy. ShippingLabel je dostupný až v historii boxu."
+      }
+    },
+    {
+      "id": 31,
+      "title": "BR · aktuální odpovědi",
+      "description": "",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 55,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((line_br_response_code{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 32,
+      "title": "BR · pozorované chybové odpovědi",
+      "description": "",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 8,
+        "y": 55,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "increase(line_br_observations_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",result=\"error\"}[${__range_s}s])",
+          "legendFormat": "{{station}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "gradient",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "id": 33,
+      "title": "Plausicheck · obsah ShippingLabel",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 55,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_plausi_label_present{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Řetězec prázdný",
+                  "color": "gray",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Řetězec vyplněný",
+                  "color": "blue",
+                  "index": 2
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 34,
+      "title": "Kvalita čtení BR",
+      "description": "",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 62,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 35,
+      "title": "Ztráty při zápisu archivu",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 62,
+        "w": 6,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "event_journal_dropped_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 36,
+      "title": "Reset / nespojitost počítadla",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 62,
+        "w": 6,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "line_box_counter_discontinuities_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 37,
+      "title": "Výkon v čase · pozorované boxy/h",
+      "description": "",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 69,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((rate(line_observed_box_increments_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[5m]) * 3600 and on(job,instance) (rate(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[5m]) >= 0.9)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Dohledat box / incident",
+      "type": "link",
+      "url": "${history_url}",
+      "targetBlank": true
+    },
+    {
+      "title": "Detail zařízení",
+      "type": "link",
+      "url": "/d/plc-machine-detail",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "annotations": {
+    "list": []
+  }
+}

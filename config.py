@@ -42,9 +42,9 @@ PLC_MAX_SAMPLE_GAP_SEC = _get_env_float(
     "PLC_MAX_SAMPLE_GAP_SEC", max(5.0, 3 * PLC_READ_INTERVAL_SEC)
 )
 
-# Dekodéry používají absolutní offsety DB, nejvyšší čtený byte je 3650.
-if START_OFFSET != 0 or SIZE < 3651:
-    raise ValueError("PLC_START_OFFSET must be 0 and PLC_DB_SIZE must be >= 3651")
+# BR11 direction is the highest decoded byte (7076); DB2000 total is 8122.
+if START_OFFSET != 0 or SIZE < 7077:
+    raise ValueError("PLC_START_OFFSET must be 0 and PLC_DB_SIZE must be >= 7077")
 for name in ("PLC_READ_INTERVAL_SEC", "PLC_RECONNECT_DELAY_SEC",
              "EXCEL_REFRESH_INTERVAL_SEC", "PLC_MAX_SAMPLE_GAP_SEC"):
     value = globals()[name]
