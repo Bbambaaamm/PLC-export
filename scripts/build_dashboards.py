@@ -120,7 +120,7 @@ def clean_table(p, columns, names=None):
     # The Prometheus table response contains job/instance/__name__/Time; keep only operator fields.
     keep = set(columns)
     all_fields = {"Time", "__name__", "job", "instance", "station", "machine", "material", "level", "condition", "Value", "address", "location", "estop"}
-    p["transformations"] = [{"id": "organize", "options": {"excludeByName": {k: True for k in all_fields - keep},
+    p["transformations"] = [{"id": "organize", "options": {"excludeByName": {k: True for k in sorted(all_fields - keep)},
         "indexByName": {k: i for i, k in enumerate(columns)}, "renameByName": names or {}}}]
     p["options"] = {"showHeader": True, "cellHeight": "sm", "footer": {"show": False}}
     return p
@@ -138,12 +138,60 @@ def dashboard(uid, title, panels, detail=False):
     return {"uid": uid, "title": title, "schemaVersion": 39, "version": 2, "timezone": "Europe/Prague",
             "description": "Kompaktní provozní přehled podle původního dashboardu. Čekání není automaticky porucha; BR pozorování nejsou garantované průjezdy. OEE a forecast vyžadují schválený kontrakt a směnový kalendář.",
             "tags": ["PLC", "DB2000", "Smartlog"], "editable": True, "refresh": "10s", "time": {"from": "now-6h", "to": "now"},
-            "templating": {"list": variables}, "panels": panels,
+            "templating": {"list": variables}, "panels": panels, "graphTooltip": 1,
             "links": [{"title": "Historie boxů / incidentů", "type": "link", "url": "${history_url}", "targetBlank": True},
                       {"title": "Přehled linky" if detail else "Detail zařízení", "type": "link",
                        "url": "/d/plc-line-overview" if detail else "/d/plc-machine-detail", "includeVars": True, "keepTime": True}],
             "annotations": {"list": []}}
 
+
+
+def rolling_production(extra='prefix=~"05|10|15|20"', total=False):
+    """One-hour counter increase at every plotted timestamp, never rate*3600."""
+    value = f'increase({selector("br08_prefix_total", extra)}[1h])'
+    if total:
+        value = f'sum by(job,instance) ({value})'
+    coverage = f'increase({selector("line_observed_seconds_total")}[1h]) >= 3420'
+    br_valid = selector("line_br_data_valid", 'station="BR08"')
+    return fresh(f'({value}) and on(job,instance) ({coverage}) and on(job,instance) (min_over_time({br_valid}[1h]) == 1)')
+
+
+def production_panel():
+    p = panel(60, "Produkce BR08 · klouzavý součet za posledních 60 minut", rolling_production(total=True),
+              0, 5, 24, 10, "timeseries", unit="locale", legend="Celkem",
+              description="Každý bod = přírůstek čítače za předchozích 60 minut. Celkem = 05 + 10 + 15 + 20. Zdroj: původní BR08 čítače s deduplikací BoxID; nejde o garantované fyzické průjezdy. Vyžaduje alespoň 95 % časového pokrytí a platné BR08 vzorky v hodinovém okně. Barevné oblasti jsou pozorovaná čekání a hlášené stavy; souběh s poklesem neprokazuje příčinu.")
+    p["fieldConfig"]["defaults"]["min"] = 0
+    p["fieldConfig"]["defaults"]["custom"].update(axisLabel="boxů / posledních 60 min", fillOpacity=0, lineWidth=2)
+    p["options"]["legend"].update(displayMode="table", placement="right", width=190, calcs=["lastNotNull"])
+    p["fieldConfig"]["overrides"].append(override("Celkem", **{"color":{"mode":"fixed","fixedColor":"text"}, "custom.lineWidth":3}))
+    for i,(prefix,color) in enumerate((("05","blue"),("10","green"),("15","orange"),("20","purple")),1):
+        label = "Boxy " + prefix
+        p["targets"].append(dict(p["targets"][0], refId=chr(65+i), expr=rolling_production(f'prefix="{prefix}"'), legendFormat=label))
+        p["fieldConfig"]["overrides"].append(override(label, color={"mode":"fixed","fixedColor":color}))
+    return p
+
+
+def production_annotations():
+    station = 'station=~"${incident_station:regex}"'
+    def annotation(name, expr, color, title, text, tags="station"):
+        return {"name":name,"enable":True,"hide":False,"type":"dashboard","datasource":DS,
+                "expr":expr,"step":"10s","useValueForTime":False,"iconColor":color,
+                "titleFormat":title,"textFormat":text,"tagKeys":tags,
+                "filter":{"exclude":False,"ids":[60,21]}}
+    events = [annotation("Čekání", fresh(selector("line_waiting_active", station)), "#FFB357",
+               "{{station}} · čekání před zařízením", "Prostojový bit DB: obsazený snímač, stojící motor a zapnutý dopravník. Neurčuje příčinu.")]
+    for code,name,color,text in (
+        (5,"Materiál stop","#F2495C","Zařízení hlásí nedostatek materiálu."),
+        (6,"Chyba stroje","#E02F44","Aktivní chybový stav stroje."),
+        (7,"Bezpečnost","#B877D9","Bezpečnost zařízení není připravena."),
+    ):
+        events.append(annotation(name, fresh(f'{selector("line_machine_state", station)} == {code}'), color,
+                                 "{{station}} · " + name, text + " Stav dle zobrazovací priority; souběžné signály jsou v detailu."))
+    br_valid = selector("line_br_data_valid", 'station="BR08"')
+    invalid = f'((1 - {selector("plc_data_valid")}) and on(job,instance) ({selector("up")} == 1)) or (1 - {selector("up")}) or ({fresh(f"1 - {br_valid}")})'
+    events.append(annotation("Výpadek dat", invalid, "#8E8E8E", "Neplatná nebo nedostupná data",
+                             "V tomto intervalu nelze stav linky spolehlivě posoudit.", ""))
+    return events
 
 def build():
     br08_observations = increase("line_br_observations_total", 'station="BR08"')
@@ -247,7 +295,24 @@ def build():
     for key,name in MATERIAL_NAMES.items():
         for level,label in (("warning","varování"),("stop","stop")):
             detail[5]["fieldConfig"]["overrides"].append(override(f"{key} · {level}",displayName=f"{name} · {label}"))
-    return {"line-overview.json": dashboard("plc-line-overview", "Smartlog · přehled linky", panels),
+    # Place the main production plot immediately after the compact KPI row.
+    for p in panels:
+        if p["gridPos"]["y"] >= 4:
+            p["gridPos"]["y"] += 11
+        if p["id"] == 5:
+            p["title"] = "BR08 · poslední hodina"
+            p["targets"][0]["expr"] = rolling_production(total=True)
+            p["description"] = "Stejný hodinový součet 05 + 10 + 15 + 20 jako hlavní graf. Prvních přibližně 60 minut nebo při nedostatečném pokrytí není dostupný."
+        if p["id"] == 21:
+            p["description"] = "Rychlá odezva: přírůstky senzoru před vraty 38 za 5 minut přepočtené na boxů/h. Jiné místo a jiné okno než hlavní BR08 graf. Události na stejné časové ose umožňují porovnání, nikoli důkaz příčiny."
+    panels += [row(61, "Produkce a události linky", 4), production_panel()]
+    panels.sort(key=lambda p:(p["gridPos"]["y"],p["gridPos"]["x"]))
+    overview = dashboard("plc-line-overview", "Smartlog · přehled linky", panels)
+    overview["templating"]["list"].append({"name":"incident_station","label":"Události zařízení","type":"custom",
+        "query":",".join(f"{label} : {key}" for key,label in NAMES.items()), "multi":True,"includeAll":True,"allValue":".*",
+        "current":{"text":["All"],"value":["$__all"]}})
+    overview["annotations"]["list"] = production_annotations()
+    return {"line-overview.json": overview,
             "machine-detail.json": dashboard("plc-machine-detail", "Smartlog · detail zařízení", detail, True)}
 
 

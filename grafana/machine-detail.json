@@ -834,17 +834,17 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "station": true,
-              "machine": true,
-              "estop": true,
-              "address": true,
-              "instance": true,
-              "job": true,
-              "location": true,
-              "material": true,
               "Time": true,
               "__name__": true,
-              "level": true
+              "address": true,
+              "estop": true,
+              "instance": true,
+              "job": true,
+              "level": true,
+              "location": true,
+              "machine": true,
+              "material": true,
+              "station": true
             },
             "indexByName": {
               "condition": 0,
@@ -1093,6 +1093,7 @@
       }
     }
   ],
+  "graphTooltip": 1,
   "links": [
     {
       "title": "Historie boxů / incidentů",

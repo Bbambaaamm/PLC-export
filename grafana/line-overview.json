@@ -61,6 +61,23 @@
           "text": "http://EXPORTER:8000/history",
           "value": "http://EXPORTER:8000/history"
         }
+      },
+      {
+        "name": "incident_station",
+        "label": "Události zařízení",
+        "type": "custom",
+        "query": "Váha : vaha,Ranpak V10 : V10,Ranpak V20 : V20,AKL pravá : AKL1,AKL levá : AKL2,Teleskop levý : T1,Teleskop pravý : T2",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
       }
     ]
   },
@@ -260,8 +277,8 @@
     },
     {
       "id": 5,
-      "title": "BR08 · pozorování",
-      "description": "Počet změn neprázdného BR snapshotu. Není počtem unikátních fyzických průjezdů.",
+      "title": "BR08 · poslední hodina",
+      "description": "Stejný hodinový součet 05 + 10 + 15 + 20 jako hlavní graf. Prvních přibližně 60 minut nebo při nedostatečném pokrytí není dostupný.",
       "type": "stat",
       "gridPos": {
         "x": 12,
@@ -276,7 +293,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(increase(line_br_observations_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[${__range_s}s]))",
+          "expr": "(((sum by(job,instance) (increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=~\"05|10|15|20\"}[1h]))) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -456,13 +473,220 @@
       }
     },
     {
+      "id": 61,
+      "type": "row",
+      "title": "Produkce a události linky",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 60,
+      "title": "Produkce BR08 · klouzavý součet za posledních 60 minut",
+      "description": "Každý bod = přírůstek čítače za předchozích 60 minut. Celkem = 05 + 10 + 15 + 20. Zdroj: původní BR08 čítače s deduplikací BoxID; nejde o garantované fyzické průjezdy. Vyžaduje alespoň 95 % časového pokrytí a platné BR08 vzorky v hodinovém okně. Barevné oblasti jsou pozorovaná čekání a hlášené stavy; souběh s poklesem neprokazuje příčinu.",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(((sum by(job,instance) (increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=~\"05|10|15|20\"}[1h]))) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Celkem",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "(((increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=\"05\"}[1h])) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Boxy 05",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "(((increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=\"10\"}[1h])) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Boxy 10",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "(((increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=\"15\"}[1h])) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Boxy 15",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "(((increase(br08_prefix_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",prefix=\"20\"}[1h])) and on(job,instance) (increase(line_observed_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}[1h]) >= 3420) and on(job,instance) (min_over_time(line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}[1h]) == 1)) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "legendFormat": "Boxy 20",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "axisLabel": "boxů / posledních 60 min",
+            "axisBorderShow": false
+          },
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Celkem"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Boxy 05"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Boxy 10"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Boxy 15"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Boxy 20"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "width": 190
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
       "id": 8,
       "title": "OEE",
       "description": "Chybí definice plánovaného času, ideálního taktu, kvality a rozhodujícího stavu celé linky.",
       "type": "stat",
       "gridPos": {
         "x": 0,
-        "y": 4,
+        "y": 15,
         "w": 4,
         "h": 3
       },
@@ -522,7 +746,7 @@
       "type": "stat",
       "gridPos": {
         "x": 4,
-        "y": 4,
+        "y": 15,
         "w": 4,
         "h": 3
       },
@@ -582,7 +806,7 @@
       "type": "stat",
       "gridPos": {
         "x": 8,
-        "y": 4,
+        "y": 15,
         "w": 4,
         "h": 3
       },
@@ -642,7 +866,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 12,
-        "y": 4,
+        "y": 15,
         "w": 12,
         "h": 3
       },
@@ -790,7 +1014,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 7,
+        "y": 18,
         "w": 24,
         "h": 1
       }
@@ -798,11 +1022,11 @@
     {
       "id": 21,
       "title": "Pozorované tempo · boxů/h",
-      "description": "",
+      "description": "Rychlá odezva: přírůstky senzoru před vraty 38 za 5 minut přepočtené na boxů/h. Jiné místo a jiné okno než hlavní BR08 graf. Události na stejné časové ose umožňují porovnání, nikoli důkaz příčiny.",
       "type": "timeseries",
       "gridPos": {
         "x": 0,
-        "y": 8,
+        "y": 19,
         "w": 12,
         "h": 6
       },
@@ -864,7 +1088,7 @@
       "type": "timeseries",
       "gridPos": {
         "x": 12,
-        "y": 8,
+        "y": 19,
         "w": 6,
         "h": 6
       },
@@ -926,7 +1150,7 @@
       "type": "state-timeline",
       "gridPos": {
         "x": 18,
-        "y": 8,
+        "y": 19,
         "w": 6,
         "h": 6
       },
@@ -1097,7 +1321,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 14,
+        "y": 25,
         "w": 24,
         "h": 1
       }
@@ -1109,7 +1333,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 0,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -1406,7 +1630,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 4,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -1892,7 +2116,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 8,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -2378,7 +2602,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 12,
-        "y": 15,
+        "y": 26,
         "w": 4,
         "h": 8
       },
@@ -2392,2889 +2616,7 @@
           "expr": "((Line1_SystemReady{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
           "legendFormat": "Připravenost",
           "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "B",
-          "expr": "((Line1_StartDispatch{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Výdej boxu",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "C",
-          "expr": "((Line1_LabelWarning{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Etikety · varování",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "D",
-          "expr": "((Line1_LabelOut{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Etikety · došly",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "E",
-          "expr": "((Line1_RibbonWarning{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Páska · varování",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "F",
-          "expr": "((Line1_RibbonOut{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Páska · došla",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "G",
-          "expr": "((Line1_PassthroughMode{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Bez etiketování",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "blue"
-          },
-          "decimals": 0,
-          "min": 0,
-          "max": 1
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Připravenost"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "gray",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "gray",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Výdej boxu"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "gray",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "gray",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Etikety · varování"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "orange",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Etikety · došly"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Páska · varování"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "orange",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Páska · došla"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Bez etiketování"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "purple",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "purple",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "displayMode": "basic",
-        "orientation": "horizontal",
-        "showUnfilled": true,
-        "valueMode": "color",
-        "namePlacement": "top",
-        "minVizHeight": 14,
-        "minVizWidth": 0,
-        "text": {
-          "titleSize": 11,
-          "valueSize": 12
-        }
-      },
-      "links": [
-        {
-          "title": "Detail zařízení",
-          "url": "/d/plc-machine-detail?var-station=AKL1&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS:percentencode}&var-history_url=${history_url:percentencode}&${__url_time_range}"
-        }
-      ]
-    },
-    {
-      "id": 35,
-      "title": "AKL levá · P2",
-      "description": "",
-      "type": "bargauge",
-      "gridPos": {
-        "x": 16,
-        "y": 15,
-        "w": 4,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "((Line2_SystemReady{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Připravenost",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "B",
-          "expr": "((Line2_StartDispatch{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Výdej boxu",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "C",
-          "expr": "((Line2_LabelWarning{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Etikety · varování",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "D",
-          "expr": "((Line2_LabelOut{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Etikety · došly",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "E",
-          "expr": "((Line2_RibbonWarning{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Páska · varování",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "F",
-          "expr": "((Line2_RibbonOut{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Páska · došla",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "G",
-          "expr": "((Line2_PassthroughMode{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Bez etiketování",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "blue"
-          },
-          "decimals": 0,
-          "min": 0,
-          "max": 1
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Připravenost"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "gray",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "gray",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Výdej boxu"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "gray",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "gray",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Etikety · varování"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "orange",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Etikety · došly"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Páska · varování"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "orange",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Páska · došla"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Bez etiketování"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "purple",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "purple",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "displayMode": "basic",
-        "orientation": "horizontal",
-        "showUnfilled": true,
-        "valueMode": "color",
-        "namePlacement": "top",
-        "minVizHeight": 14,
-        "minVizWidth": 0,
-        "text": {
-          "titleSize": 11,
-          "valueSize": 12
-        }
-      },
-      "links": [
-        {
-          "title": "Detail zařízení",
-          "url": "/d/plc-machine-detail?var-station=AKL2&var-job=${job:percentencode}&var-instance=${instance:percentencode}&var-DS_PROMETHEUS=${DS_PROMETHEUS:percentencode}&var-history_url=${history_url:percentencode}&${__url_time_range}"
-        }
-      ]
-    },
-    {
-      "id": 36,
-      "title": "Teleskopy",
-      "description": "",
-      "type": "bargauge",
-      "gridPos": {
-        "x": 20,
-        "y": 15,
-        "w": 4,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "((pasChod_levy_T1{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "T1 · chod",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "B",
-          "expr": "((safetyReady_levy_T1{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "T1 · bezpečnost",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "C",
-          "expr": "((pasChod_pravy_T2{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "T2 · chod",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "D",
-          "expr": "((safetyReady_pravy_T2{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "T2 · bezpečnost",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "blue"
-          },
-          "decimals": 0,
-          "min": 0,
-          "max": 1
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "T1 · chod"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "gray",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "gray",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "T1 · bezpečnost"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "gray",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "gray",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "T2 · chod"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "gray",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "gray",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "T2 · bezpečnost"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "gray",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "gray",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "displayMode": "basic",
-        "orientation": "horizontal",
-        "showUnfilled": true,
-        "valueMode": "color",
-        "namePlacement": "top",
-        "minVizHeight": 14,
-        "minVizWidth": 0,
-        "text": {
-          "titleSize": 11,
-          "valueSize": 12
-        }
-      }
-    },
-    {
-      "id": 37,
-      "title": "Smartlog · ESTOP",
-      "description": "",
-      "type": "bargauge",
-      "gridPos": {
-        "x": 0,
-        "y": 23,
-        "w": 6,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "((smartlog_estop_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "{{estop}}",
-          "instant": true,
-          "range": false,
-          "format": "time_series",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 0,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "Neaktivní",
-                  "color": "green",
-                  "index": 0
-                },
-                "1": {
-                  "text": "Aktivní",
-                  "color": "red",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "min": 0,
-          "max": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "displayMode": "basic",
-        "orientation": "horizontal",
-        "showUnfilled": true,
-        "valueMode": "color",
-        "namePlacement": "left",
-        "minVizHeight": 14,
-        "minVizWidth": 0,
-        "text": {
-          "titleSize": 11,
-          "valueSize": 12
-        }
-      }
-    },
-    {
-      "id": 38,
-      "title": "Gebhardt · ESTOP",
-      "description": "Aktuální signály DB. Zelená = aktivní provozní signál nebo neaktivní chyba; červená = aktivní chyba, oranžová = varování. Bez platných dat se signály nezobrazují jako zdravé.",
-      "type": "bargauge",
-      "gridPos": {
-        "x": 6,
-        "y": 23,
-        "w": 4,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "((aktivovanoTlacitko1{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Tlačítko 1",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "B",
-          "expr": "((aktivovanoTlacitko2{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Tlačítko 2",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "C",
-          "expr": "((aktivovanoTlacitko3{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Tlačítko 3",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "D",
-          "expr": "((aktivovanoTlacitko4{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Tlačítko 4",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "E",
-          "expr": "((aktivovanoTlacitko5{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Tlačítko 5",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "F",
-          "expr": "((aktivovanoTlacitko6{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "Tlačítko 6",
-          "instant": true,
-          "range": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "blue"
-          },
-          "decimals": 0,
-          "min": 0,
-          "max": 1
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Tlačítko 1"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Tlačítko 2"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Tlačítko 3"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Tlačítko 4"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Tlačítko 5"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Tlačítko 6"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": {
-                        "text": "Ne",
-                        "color": "green",
-                        "index": 0
-                      },
-                      "1": {
-                        "text": "Ano",
-                        "color": "red",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "displayMode": "basic",
-        "orientation": "horizontal",
-        "showUnfilled": true,
-        "valueMode": "color",
-        "namePlacement": "left",
-        "minVizHeight": 14,
-        "minVizWidth": 0,
-        "text": {
-          "titleSize": 11,
-          "valueSize": 12
-        }
-      }
-    },
-    {
-      "id": 41,
-      "title": "Stavy zařízení",
-      "description": "",
-      "type": "state-timeline",
-      "gridPos": {
-        "x": 10,
-        "y": 23,
-        "w": 14,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "{{station}}",
-          "instant": false,
-          "range": true,
-          "format": "time_series",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "decimals": 0,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "-1": {
-                  "text": "Bez platných dat",
-                  "color": "gray",
-                  "index": 0
-                },
-                "0": {
-                  "text": "Bez potvrzení chodu",
-                  "color": "gray",
-                  "index": 1
-                },
-                "1": {
-                  "text": "Připraveno",
-                  "color": "blue",
-                  "index": 2
-                },
-                "2": {
-                  "text": "Chod potvrzen",
-                  "color": "green",
-                  "index": 3
-                },
-                "3": {
-                  "text": "Čekání před zařízením",
-                  "color": "yellow",
-                  "index": 4
-                },
-                "4": {
-                  "text": "Doplňte materiál",
-                  "color": "orange",
-                  "index": 5
-                },
-                "5": {
-                  "text": "Materiál došel",
-                  "color": "red",
-                  "index": 6
-                },
-                "6": {
-                  "text": "Chyba stroje",
-                  "color": "red",
-                  "index": 7
-                },
-                "7": {
-                  "text": "Bezpečnost nepřipravena",
-                  "color": "red",
-                  "index": 8
-                },
-                "8": {
-                  "text": "Průchod bez etiketování",
-                  "color": "purple",
-                  "index": 9
-                }
-              }
-            }
-          ],
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 85,
-            "spanNulls": false,
-            "insertNulls": true
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "vaha"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Váha"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Ranpak V10"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Ranpak V20"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL pravá"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL levá"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "T1"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Teleskop levý"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "T2"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Teleskop pravý"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": [],
-          "showLegend": false
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "mergeValues": true,
-        "showValue": "never",
-        "rowHeight": 0.75,
-        "alignValue": "left"
-      }
-    },
-    {
-      "id": 40,
-      "type": "row",
-      "title": "Stavy a materiálové události",
-      "collapsed": false,
-      "panels": [],
-      "gridPos": {
-        "x": 0,
-        "y": 31,
-        "w": 24,
-        "h": 1
-      }
-    },
-    {
-      "id": 42,
-      "title": "Ranpak · aktivní chyba stroje",
-      "description": "",
-      "type": "state-timeline",
-      "gridPos": {
-        "x": 0,
-        "y": 32,
-        "w": 6,
-        "h": 7
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "((V10_bMachineError{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "V10",
-          "instant": false,
-          "range": true,
-          "format": "time_series",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        },
-        {
-          "refId": "B",
-          "expr": "((V20_bMachineError{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "V20",
-          "instant": false,
-          "range": true,
-          "format": "time_series",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "decimals": 0,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "Bez chyby",
-                  "color": "green",
-                  "index": 0
-                },
-                "1": {
-                  "text": "Chyba",
-                  "color": "red",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 85,
-            "spanNulls": false,
-            "insertNulls": true
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": [],
-          "showLegend": false
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "mergeValues": true,
-        "showValue": "never",
-        "rowHeight": 0.75,
-        "alignValue": "left"
-      }
-    },
-    {
-      "id": 43,
-      "title": "Materiál · zachycené aktivace stop",
-      "description": "",
-      "type": "bargauge",
-      "gridPos": {
-        "x": 6,
-        "y": 32,
-        "w": 6,
-        "h": 7
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "increase(line_material_activations_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",level=\"stop\"}[${__range_s}s])",
-          "legendFormat": "{{machine}} · {{material}}",
-          "instant": true,
-          "range": false,
-          "format": "time_series",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "orange"
-          },
-          "decimals": 0
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · vika"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · víka"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · lepidlo"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · lepidlo"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · etikety"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · etikety"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · paska"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · páska"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · vika"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · víka"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · lepidlo"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · lepidlo"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · etikety"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · etikety"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · paska"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · páska"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10 · vika"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V10 · víka"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10 · lepidlo"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V10 · lepidlo"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10 · etikety"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V10 · etikety"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10 · paska"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V10 · páska"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20 · vika"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V20 · víka"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20 · lepidlo"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V20 · lepidlo"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20 · etikety"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V20 · etikety"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20 · paska"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V20 · páska"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "displayMode": "basic",
-        "orientation": "horizontal",
-        "showUnfilled": true,
-        "valueMode": "color",
-        "namePlacement": "left",
-        "minVizHeight": 14,
-        "minVizWidth": 0,
-        "text": {
-          "titleSize": 11,
-          "valueSize": 12
-        }
-      }
-    },
-    {
-      "id": 44,
-      "title": "AKL · materiálové stavy",
-      "description": "",
-      "type": "state-timeline",
-      "gridPos": {
-        "x": 12,
-        "y": 32,
-        "w": 12,
-        "h": 7
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "(line_material_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\",machine=~\"AKL1|AKL2\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "{{machine}} · {{material}} · {{level}}",
-          "instant": false,
-          "range": true,
-          "format": "time_series",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "decimals": 0,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "-1": {
-                  "text": "Bez dat",
-                  "color": "gray",
-                  "index": 0
-                },
-                "0": {
-                  "text": "Neaktivní",
-                  "color": "blue",
-                  "index": 1
-                },
-                "1": {
-                  "text": "Aktivní",
-                  "color": "orange",
-                  "index": 2
-                }
-              }
-            }
-          ],
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 85,
-            "spanNulls": false,
-            "insertNulls": true
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · vika · warning"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · víka · varování"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · vika · stop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · víka · stop"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · lepidlo · warning"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · lepidlo · varování"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · lepidlo · stop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · lepidlo · stop"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · etikety · warning"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · etikety · varování"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · etikety · stop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · etikety · stop"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · paska · warning"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · páska · varování"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · paska · stop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · páska · stop"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · vika · warning"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · víka · varování"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · vika · stop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · víka · stop"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · lepidlo · warning"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · lepidlo · varování"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · lepidlo · stop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · lepidlo · stop"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · etikety · warning"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · etikety · varování"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · etikety · stop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · etikety · stop"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · paska · warning"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · páska · varování"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · paska · stop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · páska · stop"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": [],
-          "showLegend": false
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "mergeValues": true,
-        "showValue": "never",
-        "rowHeight": 0.75,
-        "alignValue": "left"
-      }
-    },
-    {
-      "id": 45,
-      "title": "Varování → stop · poslední měření",
-      "description": "Vyžaduje předchozí zachycené varování bez mezery v datech. Lepidlo předběžné varování nemá.",
-      "type": "bargauge",
-      "gridPos": {
-        "x": 0,
-        "y": 39,
-        "w": 12,
-        "h": 6
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "((line_material_warning_lead_seconds{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "{{machine}} · {{material}}",
-          "instant": true,
-          "range": false,
-          "format": "time_series",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "noValue": "Bez dat",
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "blue"
-          },
-          "decimals": 0
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · vika"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · víka"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · lepidlo"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · lepidlo"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · etikety"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · etikety"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL1 · paska"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL1 · páska"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · vika"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · víka"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · lepidlo"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · lepidlo"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · etikety"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · etikety"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "AKL2 · paska"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AKL2 · páska"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10 · vika"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V10 · víka"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10 · lepidlo"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V10 · lepidlo"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10 · etikety"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V10 · etikety"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V10 · paska"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V10 · páska"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20 · vika"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V20 · víka"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20 · lepidlo"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V20 · lepidlo"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20 · etikety"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V20 · etikety"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "V20 · paska"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "V20 · páska"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "displayMode": "basic",
-        "orientation": "horizontal",
-        "showUnfilled": true,
-        "valueMode": "color",
-        "namePlacement": "left",
-        "minVizHeight": 14,
-        "minVizWidth": 0,
-        "text": {
-          "titleSize": 11,
-          "valueSize": 12
-        }
-      }
-    },
-    {
-      "id": 46,
-      "title": "AKL · průchod bez etiketování",
-      "description": "",
-      "type": "state-timeline",
-      "gridPos": {
-        "x": 12,
-        "y": 39,
-        "w": 12,
-        "h": 6
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "(line_label_bypass_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
-          "legendFormat": "{{machine}}",
-          "instant": false,
-          "range": true,
-          "format": "time_series",
-          "datasource": {
-            "type": "prometheus",
+          "range":…22772 tokens truncated…type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           }
         }
@@ -5343,7 +2685,7 @@
       "panels": [],
       "gridPos": {
         "x": 0,
-        "y": 45,
+        "y": 56,
         "w": 24,
         "h": 1
       }
@@ -5355,7 +2697,7 @@
       "type": "table",
       "gridPos": {
         "x": 0,
-        "y": 46,
+        "y": 57,
         "w": 6,
         "h": 7
       },
@@ -5401,17 +2743,17 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "machine": true,
-              "estop": true,
+              "Time": true,
+              "__name__": true,
               "address": true,
+              "condition": true,
+              "estop": true,
               "instance": true,
               "job": true,
+              "level": true,
               "location": true,
-              "material": true,
-              "Time": true,
-              "condition": true,
-              "__name__": true,
-              "level": true
+              "machine": true,
+              "material": true
             },
             "indexByName": {
               "station": 0,
@@ -5432,7 +2774,7 @@
       "type": "bargauge",
       "gridPos": {
         "x": 6,
-        "y": 46,
+        "y": 57,
         "w": 6,
         "h": 7
       },
@@ -5494,7 +2836,7 @@
       "type": "table",
       "gridPos": {
         "x": 12,
-        "y": 46,
+        "y": 57,
         "w": 6,
         "h": 7
       },
@@ -5557,17 +2899,17 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "machine": true,
-              "estop": true,
+              "Time": true,
+              "__name__": true,
               "address": true,
+              "condition": true,
+              "estop": true,
               "instance": true,
               "job": true,
+              "level": true,
               "location": true,
-              "material": true,
-              "Time": true,
-              "condition": true,
-              "__name__": true,
-              "level": true
+              "machine": true,
+              "material": true
             },
             "indexByName": {
               "station": 0,
@@ -5588,7 +2930,7 @@
       "type": "stat",
       "gridPos": {
         "x": 18,
-        "y": 46,
+        "y": 57,
         "w": 6,
         "h": 3
       },
@@ -5670,7 +3012,7 @@
       "type": "stat",
       "gridPos": {
         "x": 18,
-        "y": 49,
+        "y": 60,
         "w": 6,
         "h": 4
       },
@@ -5747,7 +3089,7 @@
       "type": "stat",
       "gridPos": {
         "x": 0,
-        "y": 53,
+        "y": 64,
         "w": 8,
         "h": 3
       },
@@ -5807,7 +3149,7 @@
       "type": "stat",
       "gridPos": {
         "x": 8,
-        "y": 53,
+        "y": 64,
         "w": 8,
         "h": 3
       },
@@ -5867,7 +3209,7 @@
       "type": "stat",
       "gridPos": {
         "x": 16,
-        "y": 53,
+        "y": 64,
         "w": 8,
         "h": 3
       },
@@ -5921,6 +3263,7 @@
       }
     }
   ],
+  "graphTooltip": 1,
   "links": [
     {
       "title": "Historie boxů / incidentů",
@@ -5937,6 +3280,127 @@
     }
   ],
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "name": "Čekání",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((line_waiting_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${incident_station:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#FFB357",
+        "titleFormat": "{{station}} · čekání před zařízením",
+        "textFormat": "Prostojový bit DB: obsazený snímač, stojící motor a zapnutý dopravník. Neurčuje příčinu.",
+        "tagKeys": "station",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      },
+      {
+        "name": "Materiál stop",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${incident_station:regex}\"} == 5) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#F2495C",
+        "titleFormat": "{{station}} · Materiál stop",
+        "textFormat": "Zařízení hlásí nedostatek materiálu. Stav dle zobrazovací priority; souběžné signály jsou v detailu.",
+        "tagKeys": "station",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      },
+      {
+        "name": "Chyba stroje",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${incident_station:regex}\"} == 6) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#E02F44",
+        "titleFormat": "{{station}} · Chyba stroje",
+        "textFormat": "Aktivní chybový stav stroje. Stav dle zobrazovací priority; souběžné signály jsou v detailu.",
+        "tagKeys": "station",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      },
+      {
+        "name": "Bezpečnost",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${incident_station:regex}\"} == 7) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#B877D9",
+        "titleFormat": "{{station}} · Bezpečnost",
+        "textFormat": "Bezpečnost zařízení není připravena. Stav dle zobrazovací priority; souběžné signály jsou v detailu.",
+        "tagKeys": "station",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      },
+      {
+        "name": "Výpadek dat",
+        "enable": true,
+        "hide": false,
+        "type": "dashboard",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "expr": "((1 - plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) or (1 - up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"}) or (((1 - line_br_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=\"BR08\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1))",
+        "step": "10s",
+        "useValueForTime": false,
+        "iconColor": "#8E8E8E",
+        "titleFormat": "Neplatná nebo nedostupná data",
+        "textFormat": "V tomto intervalu nelze stav linky spolehlivě posoudit.",
+        "tagKeys": "",
+        "filter": {
+          "exclude": false,
+          "ids": [
+            60,
+            21
+          ]
+        }
+      }
+    ]
   }
 }
