@@ -4,12 +4,12 @@
 
 1. Nasaďte exportér a nastavte Prometheus scrape `/metrics`, doporučeně každých
    10 s. Pro jednu linku používejte jednu instanci exportéru a dedikovaný job
-   `plc-export`. Ověřte `up=1`, `plc_data_valid=1` a `line_br_data_valid=1`.
+   `plc_exporter`. Ověřte `up=1`, `plc_data_valid=1` a `line_br_data_valid=1`.
 2. Přes **Dashboards → New → Import** nahrajte `grafana/line-overview.json`
    a `grafana/machine-detail.json`. Jde o classic JSON schema 39 a nativní panely
    stat, table, timeseries, state-timeline a bargauge. Import do konkrétní
    instalace Grafany je součástí provozního ověření, nikoli CI.
-3. Vyberte Prometheus datasource, job a jedinou instanci. V nastavení dashboardu → Variables nastavte skrytou proměnnou
+3. Dashboard je pro toto nasazení omezen na Prometheus datasource pojmenovaný **Zoo** (datasource proměnná má name filter `/^Zoo$/`). Vyberte job `plc_exporter` a jedinou instanci. Jednohodnotové proměnné `job`, `instance` a `station` se v PromQL používají přes přesnou shodu `=`, nikoli regex `=~`; tím se zabrání neplatnému escapování adres typu `127.0.0.1:8000`. V nastavení dashboardu → Variables nastavte skrytou proměnnou
    **history_url** na skutečnou adresu exportéru končící `/history`.
    Při přechodu na detail přes kartu zařízení ověřte tuto adresu i v detailu.
 4. Karta zařízení otevře jeho detail se stejným časovým oknem. Rozložení karet
