@@ -24,6 +24,21 @@ powershell -NoProfile -Command "try{$r=Invoke-WebRequest -UseBasicParsing -Uri '
 if errorlevel 1 set "FAILED=1"
 
 echo.
+echo === Grafana Cloud ===
+if exist "%LOCALAPPDATA%\PLC-export\grafana-cloud.token" (
+    echo Token: ulozen mimo C:\plc_exporter
+    findstr /C:"remote_write:" "%~dp0prometheus\prometheus.runtime.yml" >nul 2>&1
+    if errorlevel 1 (
+        echo VAROVANI: runtime config nema remote_write. Restartuj stop.bat + start.bat.
+    ) else (
+        echo remote_write: nakonfigurovan
+    )
+) else (
+    echo Grafana Cloud: token zatim neni ulozen.
+    echo Jednou spust grafana-cloud-setup.bat.
+)
+
+echo.
 if "%FAILED%"=="0" (
     echo CHECK OK
 ) else (

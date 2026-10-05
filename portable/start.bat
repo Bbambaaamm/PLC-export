@@ -22,6 +22,13 @@ if not exist "%~dp0prometheus\prometheus.exe" (
     exit /b 1
 )
 
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0prepare-prometheus.ps1"
+if errorlevel 1 (
+    echo CHYBA: nepodarilo se pripravit Prometheus konfiguraci.
+    pause
+    exit /b 1
+)
+
 if not exist "%~dp0var" mkdir "%~dp0var"
 if not exist "%~dp0prometheus\data" mkdir "%~dp0prometheus\data"
 
@@ -50,7 +57,7 @@ if errorlevel 1 (
 powershell -NoProfile -Command "$x=Get-NetTCPConnection -State Listen -LocalPort 9090 -ErrorAction SilentlyContinue; if($x){exit 0}else{exit 1}"
 if errorlevel 1 (
     echo Startuji Prometheus...
-    start "PLC Prometheus" /min "%~dp0prometheus\prometheus.exe" --config.file="%~dp0prometheus\prometheus.yml" --storage.tsdb.path="%~dp0prometheus\data" --storage.tsdb.retention.time=%PROM_RETENTION_TIME% --storage.tsdb.retention.size=%PROM_RETENTION_SIZE%
+    start "PLC Prometheus" /min "%~dp0prometheus\prometheus.exe" --config.file="%~dp0prometheus\prometheus.runtime.yml" --storage.tsdb.path="%~dp0prometheus\data" --storage.tsdb.retention.time=%PROM_RETENTION_TIME% --storage.tsdb.retention.size=%PROM_RETENTION_SIZE%
     timeout /t 3 /nobreak >nul
 ) else (
     echo Port 9090 uz posloucha - Prometheus znovu nespoustim.
