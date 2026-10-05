@@ -12,7 +12,7 @@ if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = Join-Path $root "dist"
 }
 $OutputDir = [IO.Path]::GetFullPath($OutputDir)
-$stage = Join-Path $OutputDir "PLC-export"
+$stage = Join-Path $OutputDir "plc_exporter"
 $zipPath = Join-Path $OutputDir "PLC-export-portable-win-x64.zip"
 $temp = Join-Path $OutputDir "_portable_tmp"
 
