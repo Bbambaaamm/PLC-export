@@ -27,6 +27,7 @@ Vychozi KPI cesta pouziva I:\. Pokud je I: sitovy mapovany disk, setup se ho
 pokusí prevest na UNC jen pro boot rezim (config.boot.cmd), protoze mapovane
 disky nejsou pred prihlasenim spolehlive dostupne.
 
+autostart-status.bat vypise, zda je aktivni BOOT TASK, STARTUP FALLBACK nebo DISABLED.
 Doporuceni: autostart zapni az po finalnim umisteni slozky C:\plc_exporter.
 
 Python i vsechny runtime knihovny jsou ve slozce Python.
