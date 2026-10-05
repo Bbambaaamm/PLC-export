@@ -171,6 +171,39 @@ def machine_card(pid, station, x, y, w, h=4):
     }]
     return p
 
+def status_matrix(pid, title, x, y, w=7, h=7):
+    """One compact live machine-state matrix for the control-room overview."""
+    p = panel(pid, title, online(selector("line_machine_state")), x, y, w, h, "stat",
+              legend="{{station}}", mappings=STATES)
+    p["options"] = {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False},
+        "colorMode": "value", "graphMode": "none", "textMode": "value_and_name",
+        "justifyMode": "center", "orientation": "horizontal", "wideLayout": True,
+        "text": {"titleSize": 11, "valueSize": 17},
+    }
+    return station_names(p)
+
+
+def safety_summary(pid, x, y, w=7, h=4):
+    smartlog = fresh(f'max by(job,instance) ({selector("smartlog_estop_active")})')
+    gebhardt = fresh(
+        f'max by(job,instance) ({{__name__=~"aktivovanoTlacitko[1-6]",{S}}})'
+    )
+    p = panel(pid, "Bezpečnost", smartlog, x, y, w, h, "stat", legend="Smartlog",
+              mappings={0: ("● OK", "green"), 1: ("● ESTOP", "red"), -1: ("● Bez dat", "gray")})
+    p["targets"].append({
+        "refId": "B", "expr": gebhardt, "legendFormat": "Gebhardt",
+        "instant": True, "range": False, "datasource": DS,
+    })
+    p["options"] = {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False},
+        "colorMode": "value", "graphMode": "none", "textMode": "value_and_name",
+        "justifyMode": "center", "orientation": "horizontal", "wideLayout": True,
+        "text": {"titleSize": 11, "valueSize": 19},
+    }
+    return p
+
+
 def clean_table(p, columns, names=None):
     # The Prometheus table response contains job/instance/__name__/Time; keep only operator fields.
     keep = set(columns)
@@ -190,7 +223,7 @@ def dashboard(uid, title, panels, detail=False):
     ]
     if detail:
         variables.append({"name": "station", "label": "Zařízení", "type": "custom", "query": ",".join(NAMES), "current": {"text": "V10", "value": "V10"}, "multi": False, "includeAll": False})
-    return {"uid": uid, "title": title, "schemaVersion": 39, "version": 4, "timezone": "Europe/Prague",
+    return {"uid": uid, "title": title, "schemaVersion": 39, "version": 5, "timezone": "Europe/Prague",
             "description": "Profesionální provozní přehled Smartlog linky. Overview zobrazuje pouze rozhodovací informace; detailní PLC signály jsou oddělené v diagnostice. Čekání není automaticky porucha a BR pozorování nejsou garantované fyzické průjezdy.",
             "tags": ["PLC", "DB2000", "Smartlog"], "editable": True, "refresh": "10s", "time": {"from": "now-6h", "to": "now"},
             "templating": {"list": variables}, "panels": panels, "graphTooltip": 1,
@@ -213,11 +246,12 @@ def rolling_production(extra='prefix=~"05|10|15|20"', total=False):
 
 def production_panel():
     p = panel(60, "Produkce · BR08 za posledních 60 minut", rolling_production(total=True),
-              0, 6, 24, 10, "timeseries", unit="locale", legend="Celkem",
+              0, 3, 17, 11, "timeseries", unit="locale", legend="Celkem",
               description="Každý bod je přírůstek čítače za předchozích 60 minut. Celkem = 05 + 10 + 15 + 20. Stavové souvislosti jsou v časově zarovnaném panelu pod grafem, aby produkční křivky zůstaly čitelné.")
     p["fieldConfig"]["defaults"]["min"] = 0
+    p["transparent"] = True
     p["fieldConfig"]["defaults"]["custom"].update(axisLabel="boxů / posledních 60 min", fillOpacity=0, lineWidth=2)
-    p["options"]["legend"].update(displayMode="table", placement="right", width=180, calcs=["lastNotNull"])
+    p["options"]["legend"].update(displayMode="list", placement="bottom", calcs=["lastNotNull"])
     p["fieldConfig"]["overrides"].append(override("Celkem", **{"color":{"mode":"fixed","fixedColor":"text"}, "custom.lineWidth":4}))
     for i,(prefix,color) in enumerate((("05","blue"),("10","green"),("15","orange"),("20","purple")),1):
         label = "Boxy " + prefix
@@ -265,50 +299,56 @@ def build():
     # ------------------------------------------------------------------
     # Professional overview: decision-first, technical detail moved out.
     # ------------------------------------------------------------------
-    overview_panels = [row(1, "Přehled linky", 0),
-        panel(2, "Boxy dnes", good_count, 0, 1, 4, 4, unit="locale",
+    overview_panels = [
+        # KPI strip — quiet, compact, no section rows.
+        panel(2, "Boxy dnes", good_count, 0, 0, 4, 3, unit="locale",
               description="Aktuální denní PLC čítač. Nejde o potvrzenou expedici."),
-        panel(3, "Tempo · boxů/h", tempo, 4, 1, 4, 4, unit="locale",
+        panel(3, "Tempo · boxů/h", tempo, 4, 0, 4, 3, unit="locale",
               description="Přírůstky za 5 minut, pouze při nejméně 90 % pokrytí měřením."),
-        panel(5, "BR08 · poslední hodina", rolling_production(total=True), 8, 1, 4, 4, unit="locale",
+        panel(5, "BR08 · poslední hodina", rolling_production(total=True), 8, 0, 4, 3, unit="locale",
               description="Součet prefixů 05/10/15/20 za klouzavých 60 minut."),
-        thresholds(panel(12, "Aktivní čekání", active_waiting, 12, 1, 4, 4, unit="locale",
+        thresholds(panel(12, "Aktivní čekání", active_waiting, 12, 0, 4, 3, unit="locale",
                          description="Počet zařízení, která právě hlásí čekání."), [("green", None), ("orange", 1)]),
-        thresholds(panel(13, "Kritické stavy", critical, 16, 1, 4, 4, unit="locale",
+        thresholds(panel(13, "Kritické stavy", critical, 16, 0, 4, 3, unit="locale",
                          description="Materiál stop + chyba stroje + nepřipravená bezpečnost."), [("green", None), ("red", 1)]),
-        panel(7, "PLC data", f'{selector("up")} * on(job,instance) {selector("plc_data_valid")}', 20, 1, 4, 4,
+        panel(7, "PLC data", f'{selector("up")} * on(job,instance) {selector("plc_data_valid")}', 20, 0, 4, 3,
               mappings={0: ("Neplatná", "red"), 1: ("Aktuální", "green")}),
+
+        # Dominant production plot + live control-room sidebar.
         production_panel(),
-        row(20, "Stav zařízení v čase", 16),
-        station_names(panel(41, "Provozní stav zařízení", online(selector("line_machine_state")),
-                            0, 17, 24, 6, "state-timeline", legend="{{station}}", mappings=STATES,
-                            description="Jedna prioritní provozní barva na zařízení. Detailní souběžné bity jsou v diagnostice.")),
-        row(30, "Aktuální stav zařízení", 23),
-        machine_card(31, "V10", 0, 24, 6), machine_card(32, "V20", 6, 24, 6),
-        machine_card(33, "AKL1", 12, 24, 6), machine_card(34, "AKL2", 18, 24, 6),
-        machine_card(35, "T1", 0, 28, 8), machine_card(36, "T2", 8, 28, 8),
-        machine_card(37, "vaha", 16, 28, 8),
-        row(40, "Bezpečnost", 32),
-        estop_board(42, "Smartlog · nouzová tlačítka", "smartlog_estop_active", "{{estop}}", 0, 33, 14, 5),
-        gebhardt_estop_board(43, 14, 33, 10, 5),
-        row(50, "Výkon a čekání", 38),
-        panel(51, "Pozorované tempo · boxů/h", tempo, 0, 39, 12, 6, "timeseries", unit="locale",
-              legend="Senzor před vraty 38",
-              description="Rychlá odezva za 5 minut; jiný měřicí bod než BR08."),
-        station_names(panel(52, "Čekání podle stanice", wait, 12, 39, 12, 6, "bargauge",
-                            unit="s", legend="{{station}}", color="orange",
+        status_matrix(31, "Aktuální stav zařízení", 17, 3, 7, 7),
+        safety_summary(32, 17, 10, 7, 4),
+
+        # Operational context. Shared time cursor with the main production chart.
+        station_names(panel(41, "Stav zařízení v čase", online(selector("line_machine_state")),
+                            0, 14, 15, 6, "state-timeline", legend="{{station}}", mappings=STATES,
+                            description="Časově zarovnaný prioritní stav zařízení. Detailní souběžné bity jsou v diagnostice.")),
+        station_names(panel(52, "Čekání podle stanice", wait, 15, 14, 9, 6, "bargauge",
+                            unit="s", legend="{{station}}", color="gray",
                             description="Součet časů stanic ve zvoleném období. Souběžná čekání se sčítají.")),
-        row(70, "Kvalita sběru a plán", 45),
-        thresholds(panel(61, "Pokrytí dat", coverage, 0, 46, 6, 3, unit="percent",
+
+        # Small health footer; technical details stay out of the overview.
+        thresholds(panel(61, "Pokrytí dat", coverage, 0, 20, 8, 3, unit="percent",
                          description="Podíl pozorovaného času ve výběru; není to OEE."), [("red", None), ("orange", 80), ("green", 95)]),
-        panel(62, "Archiv", online(selector("event_journal_healthy")), 6, 46, 6, 3,
+        panel(62, "Archiv", online(selector("event_journal_healthy")), 8, 20, 8, 3,
               mappings={0: ("Nedostupný", "red"), 1: ("Zapisuje", "green")}),
-        panel(63, "Stáří PLC dat", selector("plc_data_staleness_seconds"), 12, 46, 6, 3, unit="s"),
-        panel(64, "Dnešní plán · %", plan, 18, 46, 6, 3, unit="percent",
-              description="Zobrazuje se pouze při platném dnešním plánu z Excelu."),
+        panel(63, "Stáří PLC dat", selector("plc_data_staleness_seconds"), 16, 20, 8, 3, unit="s"),
     ]
-    # Overview bars should be information-dense but visually quiet.
-    overview_panels[-6]["options"].update(orientation="horizontal", namePlacement="left")
+    for p in overview_panels:
+        if p["id"] in (2, 3, 5, 12, 13, 7, 61, 62, 63):
+            p["transparent"] = True
+    waiting_panel = next(p for p in overview_panels if p["id"] == 52)
+    waiting_panel["fieldConfig"]["defaults"]["color"] = {"mode": "thresholds"}
+    waiting_panel["fieldConfig"]["defaults"]["thresholds"] = {
+        "mode": "absolute",
+        "steps": [
+            {"color": "gray", "value": None},
+            {"color": "orange", "value": 60},
+            {"color": "red", "value": 300},
+        ],
+    }
+    waiting_panel["options"].update(orientation="horizontal", namePlacement="left")
+
     overview = dashboard("plc-line-overview", "Smartlog · provozní přehled", overview_panels)
     overview["annotations"]["list"] = []
     overview["links"] = [
