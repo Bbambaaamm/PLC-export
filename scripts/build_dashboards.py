@@ -367,8 +367,9 @@ def build():
         panel(143, "Stáří PLC dat", selector("plc_data_staleness_seconds"), 16,43,8,3,unit="s"),
     ]
     # V20 is the second series in the same machine-error timeline.
-    technical[11]["targets"].append(dict(technical[11]["targets"][0], refId="B",
-                                         expr=fresh(selector("V20_bMachineError")), legendFormat="V20"))
+    error_panel = next(p for p in technical if p["id"] == 122)
+    error_panel["targets"].append(dict(error_panel["targets"][0], refId="B",
+                                       expr=fresh(selector("V20_bMachineError")), legendFormat="V20"))
     technical_doc = dashboard("plc-technical-diagnostics", "Smartlog · technická diagnostika", technical)
     technical_doc["links"] = [
         {"title":"Provozní přehled","type":"link","url":"/d/plc-line-overview","includeVars":True,"keepTime":True},
