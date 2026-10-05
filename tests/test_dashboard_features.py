@@ -252,25 +252,38 @@ class DashboardTests(unittest.TestCase):
 
         overview = documents["line-overview.json"]
         titles = {panel["title"] for panel in overview["panels"]}
+        self.assertEqual(len(overview["panels"]), 14)
         self.assertIn("Produkce · BR08 za posledních 60 minut", titles)
-        self.assertIn("Provozní stav zařízení", titles)
-        self.assertIn("Smartlog · nouzová tlačítka", titles)
+        self.assertIn("Aktuální stav zařízení", titles)
+        self.assertIn("Bezpečnost", titles)
+        self.assertIn("Stav zařízení v čase", titles)
         self.assertNotIn("OEE", titles)
         self.assertNotIn("Predikce směny", titles)
-        self.assertNotIn(
-            "incident_station",
-            {item["name"] for item in overview["templating"]["list"]},
+        self.assertNotIn("Smartlog · nouzová tlačítka", titles)
+        self.assertFalse(any(panel["type"] == "row" for panel in overview["panels"]))
+        self.assertLessEqual(
+            max(panel["gridPos"]["y"] + panel["gridPos"]["h"] for panel in overview["panels"]),
+            23,
         )
 
-        smartlog_estop = next(
+        safety = next(
             panel for panel in overview["panels"]
-            if panel["title"] == "Smartlog · nouzová tlačítka"
+            if panel["title"] == "Bezpečnost"
         )
-        self.assertEqual(smartlog_estop["type"], "stat")
-        self.assertEqual(smartlog_estop["options"]["textMode"], "value_and_name")
+        self.assertEqual(safety["type"], "stat")
+        self.assertEqual(len(safety["targets"]), 2)
+        self.assertEqual(safety["options"]["textMode"], "value_and_name")
+
+        current = next(
+            panel for panel in overview["panels"]
+            if panel["title"] == "Aktuální stav zařízení"
+        )
+        self.assertEqual(current["type"], "stat")
+        self.assertEqual(current["options"]["orientation"], "horizontal")
 
         technical = documents["technical-diagnostics.json"]
         technical_titles = {panel["title"] for panel in technical["panels"]}
+        self.assertIn("Smartlog · nouzová tlačítka", technical_titles)
         self.assertIn("Ranpak V10", technical_titles)
         self.assertIn("AKL pravá · P1", technical_titles)
         self.assertIn("BR · kvalita čtení", technical_titles)
