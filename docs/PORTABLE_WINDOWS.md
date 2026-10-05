@@ -52,6 +52,10 @@ PLC-export\
 ├── exporter.py
 ├── start-hidden.vbs
 ├── launch-hidden.ps1
+├── autostart.ps1
+├── autostart-enable.bat
+├── autostart-disable.bat
+├── autostart-status.bat
 ├── start.bat
 ├── stop.bat
 ├── check.bat
@@ -114,6 +118,31 @@ Po startu znovu spusť:
 
 ```text
 check.bat
+```
+
+## Automatické spuštění bez admin práv
+
+Až bude složka definitivně jako `C:\plc_exporter`, spusť jednou:
+
+```text
+autostart-enable.bat
+```
+
+Vytvoří se uživatelský zástupce `PLC Exporter.lnk` ve standardní Windows
+Startup složce. Po restartu Windows se `start-hidden.vbs` automaticky spustí
+**po přihlášení stejného uživatele**, bez administrátorských práv a bez
+Windows služby.
+
+Stav ověříš přes:
+
+```text
+autostart-status.bat
+```
+
+Vypnutí:
+
+```text
+autostart-disable.bat
 ```
 
 Pro zastavení pouze procesů z této portable složky použij:

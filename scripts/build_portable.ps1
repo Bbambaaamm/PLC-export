@@ -33,6 +33,10 @@ Write-Host "== Portable launchers =="
 Copy-Item -LiteralPath (Join-Path $root "portable\start.bat") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\start-hidden.vbs") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\launch-hidden.ps1") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\autostart.ps1") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\autostart-enable.bat") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\autostart-disable.bat") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\autostart-status.bat") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\stop.bat") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\check.bat") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\config.cmd.example") -Destination $stage
@@ -156,6 +160,11 @@ if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\start-hidde
 }
 if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\launch-hidden.ps1"))) {
     throw "ZIP root validation failed: plc_exporter\launch-hidden.ps1 was not found."
+}
+foreach ($required in @("autostart.ps1","autostart-enable.bat","autostart-disable.bat","autostart-status.bat")) {
+    if (-not (Test-Path -LiteralPath (Join-Path $verifyDir ("plc_exporter\" + $required)))) {
+        throw "ZIP root validation failed: plc_exporter\$required was not found."
+    }
 }
 if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\Python\python.exe"))) {
     throw "ZIP root validation failed: portable Python was not found."
