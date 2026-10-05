@@ -15,13 +15,23 @@ if errorlevel 1 set "FAILED=1"
 
 echo.
 echo === PLC exporter /metrics ===
-powershell -NoProfile -Command "$expected=[IO.Path]::GetFullPath('%~dp0Python\python.exe'); $xs=Get-NetTCPConnection -State Listen -LocalPort 8000 -ErrorAction SilentlyContinue; if(-not $xs){Write-Host 'Port 8000 neposloucha.'; exit 1}; foreach($x in $xs){try{$p=Get-Process -Id $x.OwningProcess -ErrorAction Stop; $actual=[IO.Path]::GetFullPath($p.Path); if(-not [string]::Equals($actual,$expected,[StringComparison]::OrdinalIgnoreCase)){Write-Host ('Port 8000 pouziva jiny proces: ' + $actual); exit 1}}catch{Write-Host ('Nelze overit vlastnika portu 8000: ' + $_.Exception.Message); exit 1}}; try{$r=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8000/metrics' -TimeoutSec 5 -ErrorAction Stop; $required=@('plc_data_valid','plc_poll_total','plc_data_staleness_seconds','excel_data_valid','event_journal_healthy'); $missing=@($required | Where-Object {$r.Content -notmatch ('(?m)^' + [regex]::Escape($_) + '\s')}); if($missing.Count -gt 0){Write-Host ('Chybi ocekavane PLC metriky: ' + ($missing -join ', ')); exit 1}; ($r.Content -split [Environment]::NewLine) | Select-String '^(plc_data_valid|plc_poll_total|plc_data_staleness_seconds|excel_data_valid|event_journal_healthy) '; exit 0}catch{Write-Host $_.Exception.Message; exit 1}"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode port -Port 8000 -ExpectedExecutable "%~dp0Python\python.exe"
+if errorlevel 1 (
+    set "FAILED=1"
+) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode exporter-health
+)
 if errorlevel 1 set "FAILED=1"
 
 echo.
 echo === Prometheus ===
-powershell -NoProfile -Command "$expected=[IO.Path]::GetFullPath('%~dp0prometheus\prometheus.exe'); $xs=Get-NetTCPConnection -State Listen -LocalPort 9090 -ErrorAction SilentlyContinue; if(-not $xs){Write-Host 'Port 9090 neposloucha.'; exit 1}; foreach($x in $xs){try{$p=Get-Process -Id $x.OwningProcess -ErrorAction Stop; $actual=[IO.Path]::GetFullPath($p.Path); if(-not [string]::Equals($actual,$expected,[StringComparison]::OrdinalIgnoreCase)){Write-Host ('Port 9090 pouziva jiny proces: ' + $actual); exit 1}}catch{Write-Host ('Nelze overit vlastnika portu 9090: ' + $_.Exception.Message); exit 1}}; try{$r=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:9090/-/healthy' -TimeoutSec 5 -ErrorAction Stop; Write-Host $r.Content; exit 0}catch{Write-Host $_.Exception.Message; exit 1}"
-if errorlevel 1 set "FAILED=1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode port -Port 9090 -ExpectedExecutable "%~dp0prometheus\prometheus.exe"
+if errorlevel 1 (
+    set "FAILED=1"
+) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode prometheus-health
+    if errorlevel 1 set "FAILED=1"
+)
 
 echo.
 echo === Grafana Cloud ===
