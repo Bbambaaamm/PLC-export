@@ -57,13 +57,17 @@ PLC-export\
 └── VERSION.txt
 ```
 
-## Stažení
+## Stažení — doporučená cesta
 
-1. Otevři v repozitáři **Actions → Portable Windows bundle**.
-2. Otevři nejnovější zelený run na `main`.
-3. V části **Artifacts** stáhni `PLC-export-portable-win-x64`.
-4. Uvnitř artefaktu je samotný `PLC-export-portable-win-x64.zip` a
-   `SHA256SUMS.txt`.
+V repozitáři otevři **Releases → PLC Exporter Portable - latest** a stáhni
+`PLC-export-portable-win-x64.zip`.
+
+Release `portable-latest` se při každém úspěšném buildu větve `main`
+automaticky nahradí aktuálním ověřeným balíkem. Vedle ZIPu je vždy
+`SHA256SUMS.txt`.
+
+Alternativně je stejný build dostupný i přes
+**Actions → Portable Windows bundle → poslední zelený run → Artifacts**.
 
 ## Bezpečné přepnutí na PC v hale
 
