@@ -2,7 +2,7 @@
   "uid": "plc-machine-detail",
   "title": "Smartlog · detail zařízení",
   "schemaVersion": 39,
-  "version": 4,
+  "version": 5,
   "timezone": "Europe/Prague",
   "description": "Profesionální provozní přehled Smartlog linky. Overview zobrazuje pouze rozhodovací informace; detailní PLC signály jsou oddělené v diagnostice. Čekání není automaticky porucha a BR pozorování nejsou garantované fyzické průjezdy.",
   "tags": [
