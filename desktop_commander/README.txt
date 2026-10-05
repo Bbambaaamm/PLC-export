@@ -8,15 +8,18 @@ POSTUP:
    "Desktop Commander Portable - latest".
 2. Rozbal ZIP primo na C:\
    Vznikne C:\desktop_commander
-3. Dvojklik na C:\desktop_commander\start.bat
-4. Pri prvnim spusteni dokonci autorizaci v prohlizeci a zkontroluj,
-   ze kod v prohlizeci odpovida kodu v terminalu.
-5. Okno start.bat nech otevrene. Zavrenim nebo Ctrl+C se PC odpoji.
+3. Prvni autorizaci proved pres C:\desktop_commander\start.bat.
+4. Po sparovani pro bezny provoz pouzivej C:\desktop_commander\start-hidden.vbs.
+5. Hidden start nema viditelne CMD/PowerShell okno a loguje do logs\desktop-commander.log.
 
 Nic se neinstaluje do Windows:
 - vlastni Node.js je uvnitr slozky
 - Desktop Commander a jeho zavislosti jsou uvnitr slozky
 - neni potreba npm, npx, PATH ani administrator
+
+STARTY:
+start.bat        - viditelny start pro prvni OAuth a diagnostiku
+start-hidden.vbs - skryty provozni start po sparovani
 
 DALSI SOUBORY:
 check.bat  - overi portable runtime bez prihlaseni
