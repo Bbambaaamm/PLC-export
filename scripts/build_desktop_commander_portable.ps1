@@ -79,7 +79,7 @@ Get-ChildItem -LiteralPath $appDir -Directory -Recurse -Filter ".cache" -ErrorAc
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host "== Launchers =="
-foreach ($file in @("start.bat","start-hidden.vbs","debug.bat","logout.bat","check.bat","README.txt")) {
+foreach ($file in @("start.bat","start-hidden.vbs","autostart.ps1","autostart-enable.bat","autostart-disable.bat","autostart-status.bat","debug.bat","logout.bat","check.bat","README.txt")) {
     Copy-Item -LiteralPath (Join-Path $root "desktop_commander\$file") -Destination $stage
 }
 
@@ -103,6 +103,17 @@ if ($LASTEXITCODE -ne 0) { throw "Desktop Commander remote --help failed." }
 
 & $portableNode $rgVerify
 if ($LASTEXITCODE -ne 0) { throw "Portable ripgrep verification failed." }
+
+$tokens = $null
+$errors = $null
+[void][System.Management.Automation.Language.Parser]::ParseFile(
+    (Join-Path $stage "autostart.ps1"),
+    [ref]$tokens,
+    [ref]$errors
+)
+if ($errors.Count -gt 0) {
+    throw ("PowerShell syntax check failed for autostart.ps1: " + ($errors | ForEach-Object { $_.Message } | Out-String))
+}
 
 Write-Host "== ZIP =="
 $sevenZip = Get-Command 7z.exe -ErrorAction SilentlyContinue
@@ -131,6 +142,11 @@ if (-not (Test-Path -LiteralPath (Join-Path $verifyRoot "start.bat"))) {
 }
 if (-not (Test-Path -LiteralPath (Join-Path $verifyRoot "start-hidden.vbs"))) {
     throw "ZIP root validation failed: desktop_commander\start-hidden.vbs was not found."
+}
+foreach ($required in @("autostart.ps1","autostart-enable.bat","autostart-disable.bat","autostart-status.bat")) {
+    if (-not (Test-Path -LiteralPath (Join-Path $verifyRoot $required))) {
+        throw "ZIP root validation failed: desktop_commander\$required was not found."
+    }
 }
 if (-not (Test-Path -LiteralPath (Join-Path $verifyRoot "node\node.exe"))) {
     throw "ZIP root validation failed: portable node.exe was not found."
