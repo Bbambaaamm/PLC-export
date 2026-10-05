@@ -298,7 +298,7 @@ def build():
         station_names(panel(52, "Čekání podle stanice", wait, 12, 39, 12, 6, "bargauge",
                             unit="s", legend="{{station}}", color="orange",
                             description="Součet časů stanic ve zvoleném období. Souběžná čekání se sčítají.")),
-        row(60, "Kvalita sběru a plán", 45),
+        row(70, "Kvalita sběru a plán", 45),
         thresholds(panel(61, "Pokrytí dat", coverage, 0, 46, 6, 3, unit="percent",
                          description="Podíl pozorovaného času ve výběru; není to OEE."), [("red", None), ("orange", 80), ("green", 95)]),
         panel(62, "Archiv", online(selector("event_journal_healthy")), 6, 46, 6, 3,
