@@ -224,6 +224,12 @@ class DashboardTests(unittest.TestCase):
     def test_generated_files_and_promql(self):
         for filename, document in build().items():
             self.assertEqual(json.loads((ROOT / 'grafana' / filename).read_text()), document)
+            serialized = json.dumps(document)
+            variables = {item["name"]: item for item in document["templating"]["list"]}
+            self.assertEqual(variables["DS_PROMETHEUS"].get("regex"), "/^Zoo$/")
+            self.assertNotIn("${job:regex}", serialized)
+            self.assertNotIn("${instance:regex}", serialized)
+            self.assertNotIn("${station:regex}", serialized)
             ids = [panel['id'] for panel in document['panels']]
             self.assertEqual(len(ids), len(set(ids)))
             for panel in document['panels']:
