@@ -51,6 +51,7 @@ PLC-export\
 ├── templates\
 ├── exporter.py
 ├── start-hidden.vbs
+├── launch-hidden.ps1
 ├── start.bat
 ├── stop.bat
 ├── check.bat
