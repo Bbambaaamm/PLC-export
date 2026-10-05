@@ -243,6 +243,38 @@ class DashboardTests(unittest.TestCase):
                     promql_parser.parse(expression)
                     self.assertTrue(set(annotation['filter']['ids']).issubset(ids))
 
+    def test_professional_dashboard_structure(self):
+        documents = build()
+        self.assertEqual(
+            set(documents),
+            {"line-overview.json", "technical-diagnostics.json", "machine-detail.json"},
+        )
+
+        overview = documents["line-overview.json"]
+        titles = {panel["title"] for panel in overview["panels"]}
+        self.assertIn("Produkce · BR08 za posledních 60 minut", titles)
+        self.assertIn("Provozní stav zařízení", titles)
+        self.assertIn("Smartlog · nouzová tlačítka", titles)
+        self.assertNotIn("OEE", titles)
+        self.assertNotIn("Predikce směny", titles)
+        self.assertNotIn(
+            "incident_station",
+            {item["name"] for item in overview["templating"]["list"]},
+        )
+
+        smartlog_estop = next(
+            panel for panel in overview["panels"]
+            if panel["title"] == "Smartlog · nouzová tlačítka"
+        )
+        self.assertEqual(smartlog_estop["type"], "stat")
+        self.assertEqual(smartlog_estop["options"]["textMode"], "value_and_name")
+
+        technical = documents["technical-diagnostics.json"]
+        technical_titles = {panel["title"] for panel in technical["panels"]}
+        self.assertIn("Ranpak V10", technical_titles)
+        self.assertIn("AKL pravá · P1", technical_titles)
+        self.assertIn("BR · kvalita čtení", technical_titles)
+
     def test_alert_expressions(self):
         rules = json.loads((ROOT / 'prometheus_rules' / 'smartlog.rules.yml').read_text())
         for group in rules['groups']:
