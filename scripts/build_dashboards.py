@@ -128,14 +128,14 @@ def clean_table(p, columns, names=None):
 
 def dashboard(uid, title, panels, detail=False):
     variables = [
-        {"name": "DS_PROMETHEUS", "label": "Zdroj", "type": "datasource", "query": "prometheus", "refresh": 1},
+        {"name": "DS_PROMETHEUS", "label": "Zdroj", "type": "datasource", "query": "prometheus", "regex": "/^Zoo$/", "refresh": 1},
         {"name": "job", "label": "Exportér", "type": "query", "datasource": DS, "query": "label_values(plc_data_valid, job)", "refresh": 1, "multi": False, "includeAll": False},
         {"name": "instance", "label": "Instance", "type": "query", "datasource": DS, "query": 'label_values(plc_data_valid{job="${job}"}, instance)', "refresh": 1, "multi": False, "includeAll": False},
         {"name": "history_url", "label": "Adresa historie", "type": "textbox", "hide": 2, "query": "http://EXPORTER:8000/history", "current": {"text": "http://EXPORTER:8000/history", "value": "http://EXPORTER:8000/history"}},
     ]
     if detail:
         variables.append({"name": "station", "label": "Zařízení", "type": "custom", "query": ",".join(NAMES), "current": {"text": "V10", "value": "V10"}, "multi": False, "includeAll": False})
-    return {"uid": uid, "title": title, "schemaVersion": 39, "version": 2, "timezone": "Europe/Prague",
+    return {"uid": uid, "title": title, "schemaVersion": 39, "version": 3, "timezone": "Europe/Prague",
             "description": "Kompaktní provozní přehled podle původního dashboardu. Čekání není automaticky porucha; BR pozorování nejsou garantované průjezdy. OEE a forecast vyžadují schválený kontrakt a směnový kalendář.",
             "tags": ["PLC", "DB2000", "Smartlog"], "editable": True, "refresh": "10s", "time": {"from": "now-6h", "to": "now"},
             "templating": {"list": variables}, "panels": panels, "graphTooltip": 1,
@@ -278,8 +278,8 @@ def build():
         if p["id"] in (32,33,34,35):
             station = {32:"V10",33:"V20",34:"AKL1",35:"AKL2"}[p["id"]]
             p["links"] = [{"title":"Detail zařízení", "url":f'/d/plc-machine-detail?var-station={station}&var-job=${{job:percentencode}}&var-instance=${{instance:percentencode}}&var-DS_PROMETHEUS=${{DS_PROMETHEUS:percentencode}}&var-history_url=${{history_url:percentencode}}&${{__url_time_range}}'}]
-    station = 'station=~"${station:regex}"'
-    machine = 'machine=~"${station:regex}"'
+    station = 'station="${station}"'
+    machine = 'machine="${station}"'
     detail = [row(1, "Detail zařízení · ${station}", 0),
         panel(2, "Aktuální stav", online(selector("line_machine_state", station)), 0, 1, 8, 3, mappings=STATES),
         panel(3, "Aktuální čekání", fresh(selector("line_waiting_current_seconds", station)), 8, 1, 8, 3, unit="s", color="orange"),
