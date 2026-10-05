@@ -11,7 +11,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo Token je ulozen. Pokud Prometheus uz bezi, spust stop.bat a potom start.bat.
+echo Token je ulozen. Pokud Prometheus uz bezi, spust stop.bat a potom start-hidden.vbs.
 echo Pri dalsich updatech ZIPu token zustane zachovan.
 pause
 exit /b 0
