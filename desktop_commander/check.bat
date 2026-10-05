@@ -20,7 +20,7 @@ if errorlevel 1 set "FAILED=1"
 echo.
 if "%FAILED%"=="0" (
     echo CHECK OK - portable runtime je pripraven.
-    echo Sit a prihlaseni se overi az pri start.bat.
+    echo Sit a prihlaseni se overi pri startu Remote MCP; prvni OAuth pres start.bat, bezny provoz pres start-hidden.vbs.
 ) else (
     echo CHECK FAILED - viz zpravy vyse.
 )
