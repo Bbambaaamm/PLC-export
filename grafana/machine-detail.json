@@ -46,7 +46,7 @@
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "query": "label_values(plc_data_valid{job=~\"${job:regex}\"}, instance)",
+        "query": "label_values(plc_data_valid{job=\"${job}\"}, instance)",
         "refresh": 1,
         "multi": false,
         "includeAll": false
@@ -108,7 +108,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${station:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "expr": "(line_machine_state{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -225,7 +225,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "((line_waiting_current_seconds{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${station:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "expr": "((line_waiting_current_seconds{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -285,7 +285,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "increase(line_waiting_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${station:regex}\"}[${__range_s}s])",
+          "expr": "increase(line_waiting_seconds_total{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}[${__range_s}s])",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -345,7 +345,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(line_machine_state{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${station:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "expr": "(line_machine_state{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "{{station}}",
           "instant": false,
           "range": true,
@@ -550,7 +550,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(line_material_active{job=~\"${job:regex}\",instance=~\"${instance:regex}\",machine=~\"${station:regex}\"}) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "expr": "(line_material_active{job=\"${job}\",instance=\"${instance}\",machine=~\"${station:regex}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "{{material}} · {{level}}",
           "instant": false,
           "range": true,
@@ -732,7 +732,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "((line_waiting_coincidence{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${station:regex}\"}) and on(job,instance) (plc_data_valid{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)) and on(job,instance) (up{job=~\"${job:regex}\",instance=~\"${instance:regex}\"} == 1)",
+          "expr": "((line_waiting_coincidence{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -876,7 +876,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "increase(line_machine_state_seconds_total{job=~\"${job:regex}\",instance=~\"${instance:regex}\",station=~\"${station:regex}\"}[${__range_s}s]) > 0",
+          "expr": "increase(line_machine_state_seconds_total{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}[${__range_s}s]) > 0",
           "legendFormat": "{{state}}",
           "instant": true,
           "range": false,
