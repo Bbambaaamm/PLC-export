@@ -3,7 +3,7 @@ import logging
 import unittest
 from unittest.mock import Mock, patch
 
-import pandas as pd
+from datetime import date, timedelta
 from prometheus_client.parser import text_string_to_metric_families
 
 import prometheus as metrics
@@ -61,7 +61,7 @@ class ExporterRegressions(unittest.TestCase):
         self.assertIn('\nplc_data_valid 0\n', self.scrape())
 
     def test_revised_and_deleted_excel_rows_replace_previous_plan(self):
-        day = pd.Timestamp.now(tz='Europe/Prague').date().isoformat()
+        day = date.today().isoformat()
         with patch.object(excel, 'read_excel_data'), patch.object(
             excel, 'get_target_pocet_boxu', side_effect=[[(day, 100)], [(day, 250)], []]
         ):
@@ -86,7 +86,7 @@ class ExporterRegressions(unittest.TestCase):
 
     def test_full_year_plan_is_not_truncated_by_event_buffer(self):
         metrics.last_data['target_pocet_boxu'] = [
-            (date.date().isoformat(), 100) for date in pd.date_range('2026-01-01', periods=365)
+            ((date(2026, 1, 1) + timedelta(days=i)).isoformat(), 100) for i in range(365)
         ]
         text = self.scrape()
         self.assertEqual(sum(line.startswith('target_pocet_boxu_podle_dne{') for line in text.splitlines()), 365)
