@@ -5,10 +5,11 @@
 1. Nasaďte exportér a nastavte Prometheus scrape `/metrics`, doporučeně každých
    10 s. Pro jednu linku používejte jednu instanci exportéru a dedikovaný job
    `plc_exporter`. Ověřte `up=1`, `plc_data_valid=1` a `line_br_data_valid=1`.
-2. Přes **Dashboards → New → Import** nahrajte `grafana/line-overview.json`
-   a `grafana/machine-detail.json`. Jde o classic JSON schema 39 a nativní panely
-   stat, table, timeseries, state-timeline a bargauge. Import do konkrétní
-   instalace Grafany je součástí provozního ověření, nikoli CI.
+2. Přes **Dashboards → New → Import** nahrajte tři dashboardy: `grafana/line-overview.json`
+   (čistý provozní overview), `grafana/technical-diagnostics.json` (detailní PLC/servisní
+   diagnostika) a `grafana/machine-detail.json` (drill-down jednoho zařízení). Jde o classic
+   JSON schema 39 a pouze nativní panely Grafany; nejsou potřeba externí pluginy. Import do
+   konkrétní instalace Grafany je součástí provozního ověření, nikoli CI.
 3. Dashboard je pro toto nasazení omezen na Prometheus datasource pojmenovaný **Zoo** (datasource proměnná má name filter `/^Zoo$/`). Vyberte job `plc_exporter` a jedinou instanci. Jednohodnotové proměnné `job`, `instance` a `station` se v PromQL používají přes přesnou shodu `=`, nikoli regex `=~`; tím se zabrání neplatnému escapování adres typu `127.0.0.1:8000`. V nastavení dashboardu → Variables nastavte skrytou proměnnou
    **history_url** na skutečnou adresu exportéru končící `/history`.
    Při přechodu na detail přes kartu zařízení ověřte tuto adresu i v detailu.
@@ -29,45 +30,38 @@ přestávek a správné definice dokončeného boxu.
 Generátor: `python scripts/build_dashboards.py`. Generované JSON jsou verzované;
 testy ověřují shodu s generátorem a parsují všechny panelové PromQL výrazy.
 
-## Hlavní graf produkce a prostojových signálů
+## Profesionální provozní layout
 
-Graf hned pod KPI ukazuje pět křivek: **Celkem, Boxy 05, 10, 15, 20**.
-Každý bod používá `increase(br08_prefix_total[1h])`, tedy klouzavý přírůstek
-za předchozích 60 minut. Celkem je součet právě těchto čtyř prefixů;
-případné jiné typy nejsou zahrnuty. Zdroj je původní čítač BR08 s deduplikací
-BoxID v paměti exportéru, nikoli čítač změn BR snapshotu. Nejde o záruku
-zachycení každého fyzického průjezdu. Prometheus přírůstky extrapoluje;
-hodnoty v grafu se zobrazují zaokrouhlené na celé boxy.
+Hlavní dashboard je záměrně rozdělen na rozhodovací vrstvu a technickou diagnostiku.
+Horní řada obsahuje jen KPI, která mají význam pro okamžité řízení linky: denní počet,
+5min tempo, BR08 za posledních 60 minut, počet aktivních čekání, počet kritických stavů
+a platnost PLC dat. OEE a predikce směny nejsou v overview zobrazovány, dokud nemají
+schválenou provozní definici.
 
-Barevné oblasti přímo v produkčním grafu a v grafu rychlého tempa zobrazují:
+Graf **Produkce · BR08 za posledních 60 minut** zobrazuje pět křivek: **Celkem, Boxy 05,
+10, 15, 20**. Každý bod používá `increase(br08_prefix_total[1h])`, tedy klouzavý
+přírůstek za předchozích 60 minut. Celkem je součet právě těchto čtyř prefixů. Zdroj je
+původní čítač BR08 s deduplikací BoxID v paměti exportéru; nejde o záruku zachycení
+každého fyzického průjezdu.
 
-- oranžová: aktivní čekání před konkrétním zařízením,
-- červená: hlášený nedostatek materiálu nebo chyba stroje,
-- fialová: nepřipravená bezpečnost,
-- šedá: neplatná PLC/BR08 data nebo nedostupný scrape target.
+Incidenty již nejsou kreslené jako husté barevné anotace přes produkční křivky. Přímo
+pod hlavním grafem je časově zarovnaný panel **Provozní stav zařízení**, takže společný
+kurzor ukazuje, co se na jednotlivých stanicích dělo ve stejném okamžiku, ale produkční
+graf zůstává čitelný. Stavové barvy jsou konzistentní: zelená = připraveno/chod, oranžová
+= čekání nebo varování, červená = stop/chyba/bezpečnost, fialová = bypass, šedá = neaktivní
+nebo neznámý stav.
 
-Najetí na značku události ukáže zařízení, typ a časový interval. Přepínače
-nad dashboardem zapínají typy událostí, **Události zařízení** filtrují stanice.
-Produkční křivky se filtrem stanic nemění. Grafy mají společný časový kurzor.
-Anotace jsou nativní Prometheus dotazy Grafany s požadovaným krokem 10 s;
-Grafana/datasource může výsledné rozlišení zvětšit. Interval sahá od
-prvního do posledního aktivního vzorku, nikoli mezi přesnými PLC hranami;
-kratší události mohou uniknout. Souběžné události se mohou překrývat.
-Chyba/materiál/bezpečnost vycházejí z prioritního stavu zařízení; kompletní
-souběžné bity zůstávají v detailu. Čekání se vyhodnocuje samostatně.
+Nouzová tlačítka používají kompaktní stavovou matici: u každého okruhu se zobrazuje pouze
+název a barevný bod. Zelený bod znamená neaktivní E-STOP, červený aktivní E-STOP a šedý
+neplatná data. Detailní provozní bity Ranpak/AKL/Smartlog/Teleskop byly přesunuty do
+`technical-diagnostics.json`, kde mají stejný kompaktní status-dot design místo dlouhých
+dekorativních barů.
 
-Hodinový graf vyžaduje alespoň 95 % pokrytí v daném hodinovém okně a platné
-BR08 vzorky. Po startu nemusí být hodinu dostupný, po neplatném BR08 vzorku
-zůstane mezera, dokud vzorek neopustí hodinové okno. Nezjištěnou produkci
-nedoplňujeme nulou. Šedá oblast vyznačuje samotný zjištěný výpadek, nikoli celé
-následující neúplné výpočetní okno. Odstranění targetu z konfigurace Promethea
-se z `up` nepozná; dohled očekávaných targetů musí řešit provozní konfigurace.
+Hodinový BR08 graf vyžaduje alespoň 95 % pokrytí v daném hodinovém okně a platné BR08
+vzorky. Po startu nemusí být hodinu dostupný. Při zastavení klesá hodinový součet postupně,
+jak starší boxy opouštějí okno. Proto zůstává samostatný 5min graf tempa ze senzoru před
+vraty 38; jde o jiný měřicí bod a jiné časové okno.
 
-Při zastavení klesá hodinový součet postupně, jak starší boxy opouštějí okno.
-Proto zůstává i rychlé tempo za 5 minut. To používá jiný měřicí bod — PLC
-senzor před vraty 38 — a není druhým výpočtem BR08. Obnovený chod nemusí ihned
-zvednout hodinový součet. Současný prostoj a pokles jsou časová souvislost;
-samotný graf neprokazuje příčinu ani počet ztracených boxů.
 
 ## Lokální historie
 
@@ -126,24 +120,15 @@ Zdroje formátů:
 - https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/view-dashboard-json-model/
 - https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
 
-## Kompaktní provozní rozložení
+## Rozdělení dashboardů
 
-Přehled navazuje na uživatelův stávající dashboard z fotografií: Hlavní KPI,
-Výkon a čekání v čase, Aktuální signály strojů, Stavy a materiálové události,
-BR / Plausicheck a kvalita sběru. Horní KPI jsou vysoké jen tři gridové řádky;
-bez celoplošných stavových barev. Počty používají celé hodnoty s oddělovačem
-místo zkrácení na K. Detail a tabulky používají provozní názvy bez technických
-sloupců job/instance/Time/__name__.
+- **Smartlog · provozní přehled** — KPI, hlavní produkce, časově zarovnaný stav zařízení,
+  kompaktní karty zařízení, bezpečnost, výkon/čekání a kvalita sběru.
+- **Smartlog · technická diagnostika** — detailní PLC signály, E-STOP okruhy, materiálové
+  stavy, BR/Plausicheck a integrita sběru.
+- **Smartlog · detail zařízení** — drill-down vybrané stanice se stavem, čekáním,
+  materiálovými signály a časem podle prioritního stavu.
 
-Signálové panely jsou v šesti čitelných sloupcích a používají původní exportované bity, vždy s kontrolou
-`up` a `plc_data_valid`. Pozitivní provozní signál je zelený při 1, neaktivní
-šedý; chybový signál je červený při 1. Varování je oranžové, bypass fialový.
-Neaktivní chybové bity mají stav „Ne“, nejde o důkaz běhu celého zařízení.
-Nové panelové odkazy z Ranpak/AKL vedou na detail a zachovávají i adresu historie.
-
-OEE a predikce směny jsou záměrně prázdné s textem „Není definováno“ a vysvětlením
-v popisu panelu. Nedostupnost výpočtu se neinterpretuje jako nula. „Pokrytí dat“
-není dostupnost linky. Součet čekání stanic není sjednocený prostoj linky.
-Žádný parametr délky směny/přestávky nepředstíráme, dokud není zapojen do
-ověřeného výpočtu. Grafana UI import/render byl při vývoji ověřen v 11.6.0
-proti Prometheu 3.2.1 se simulovanými vzorky; živé PLC se tím neověřuje.
+Overview používá minimum dekorativních prvků a konzistentní semantické barvy. Neaktivní
+stav je šedý, nikoli modrý. Diagnostické informace nejsou odstraněny; pouze jsou přesunuty
+z hlavního provozního pohledu do specializovaného dashboardu.
