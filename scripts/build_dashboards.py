@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DS = {"type": "prometheus", "uid": "${DS_PROMETHEUS}"}
-S = 'job=~"${job:regex}",instance=~"${instance:regex}"'
+S = 'job="${job}",instance="${instance}"'
 WINDOW = '${__range_s}s'
 STATES = {
     -1: ("Bez platných dat", "gray"), 0: ("Bez potvrzení chodu", "gray"),
@@ -130,7 +130,7 @@ def dashboard(uid, title, panels, detail=False):
     variables = [
         {"name": "DS_PROMETHEUS", "label": "Zdroj", "type": "datasource", "query": "prometheus", "refresh": 1},
         {"name": "job", "label": "Exportér", "type": "query", "datasource": DS, "query": "label_values(plc_data_valid, job)", "refresh": 1, "multi": False, "includeAll": False},
-        {"name": "instance", "label": "Instance", "type": "query", "datasource": DS, "query": 'label_values(plc_data_valid{job=~"${job:regex}"}, instance)', "refresh": 1, "multi": False, "includeAll": False},
+        {"name": "instance", "label": "Instance", "type": "query", "datasource": DS, "query": 'label_values(plc_data_valid{job="${job}"}, instance)', "refresh": 1, "multi": False, "includeAll": False},
         {"name": "history_url", "label": "Adresa historie", "type": "textbox", "hide": 2, "query": "http://EXPORTER:8000/history", "current": {"text": "http://EXPORTER:8000/history", "value": "http://EXPORTER:8000/history"}},
     ]
     if detail:
