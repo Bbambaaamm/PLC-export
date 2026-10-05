@@ -3,7 +3,11 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 set "HIDDEN_MODE=0"
+set "BOOT_MODE=0"
 if /I "%~1"=="--hidden" set "HIDDEN_MODE=1"
+if /I "%~2"=="--hidden" set "HIDDEN_MODE=1"
+if /I "%~1"=="--boot" set "BOOT_MODE=1"
+if /I "%~2"=="--boot" set "BOOT_MODE=1"
 
 echo ==========================================
 echo PLC Exporter - portable start
@@ -12,6 +16,10 @@ echo ==========================================
 if exist "%~dp0config.cmd" (
     echo Nacitam lokalni config.cmd...
     call "%~dp0config.cmd"
+)
+if "%BOOT_MODE%"=="1" if exist "%~dp0config.boot.cmd" (
+    echo Nacitam boot override config.boot.cmd...
+    call "%~dp0config.boot.cmd"
 )
 
 if not exist "%~dp0Python\python.exe" (
