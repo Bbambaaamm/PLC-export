@@ -11,6 +11,7 @@ POSTUP:
 3. Prvni autorizaci proved pres C:\desktop_commander\start.bat.
 4. Po sparovani pro bezny provoz pouzivej C:\desktop_commander\start-hidden.vbs.
 5. Hidden start nema viditelne CMD/PowerShell okno. Aktualni log je logs\desktop-commander.log a predchozi beh se uchova jako logs\desktop-commander.previous.log.
+6. Po uspesnem sparovani muzes jednou spustit autostart-enable.bat. Desktop Commander se pak po kazdem prihlaseni tohoto Windows uzivatele spusti automaticky skryte.
 
 Nic se neinstaluje do Windows:
 - vlastni Node.js je uvnitr slozky
@@ -22,9 +23,12 @@ start.bat        - viditelny start pro prvni OAuth a diagnostiku
 start-hidden.vbs - skryty provozni start po sparovani
 
 DALSI SOUBORY:
-check.bat  - overi portable runtime bez prihlaseni
-debug.bat  - spusti Remote Device s podrobnym logem
-logout.bat - odstrani lokalne ulozene prihlaseni
+check.bat              - overi portable runtime a stav autostartu
+autostart-enable.bat   - zapne skryty start po prihlaseni
+autostart-status.bat   - zobrazi stav autostartu
+autostart-disable.bat  - vypne autostart
+debug.bat              - spusti Remote Device s podrobnym logem
+logout.bat             - odstrani lokalne ulozene prihlaseni
 
 Pri dalsim startu se autorizace standardne znovu nepýta, protoze Desktop
 Commander uklada session do profilu aktualniho Windows uzivatele.
