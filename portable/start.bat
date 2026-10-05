@@ -2,6 +2,9 @@
 setlocal EnableExtensions
 cd /d "%~dp0"
 
+set "HIDDEN_MODE=0"
+if /I "%~1"=="--hidden" set "HIDDEN_MODE=1"
+
 echo ==========================================
 echo PLC Exporter - portable start
 echo ==========================================
@@ -13,19 +16,19 @@ if exist "%~dp0config.cmd" (
 
 if not exist "%~dp0Python\python.exe" (
     echo CHYBA: chybi Python\python.exe
-    pause
+    if "%HIDDEN_MODE%"=="0" pause
     exit /b 1
 )
 if not exist "%~dp0prometheus\prometheus.exe" (
     echo CHYBA: chybi prometheus\prometheus.exe
-    pause
+    if "%HIDDEN_MODE%"=="0" pause
     exit /b 1
 )
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0prepare-prometheus.ps1"
 if errorlevel 1 (
     echo CHYBA: nepodarilo se pripravit Prometheus konfiguraci.
-    pause
+    if "%HIDDEN_MODE%"=="0" pause
     exit /b 1
 )
 
@@ -40,7 +43,12 @@ if not defined PROM_RETENTION_SIZE set "PROM_RETENTION_SIZE=512MB"
 powershell -NoProfile -Command "$x=Get-NetTCPConnection -State Listen -LocalPort 8000 -ErrorAction SilentlyContinue; if($x){exit 0}else{exit 1}"
 if errorlevel 1 (
     echo Startuji PLC exporter...
-    start "PLC Exporter" /min "%~dp0Python\python.exe" "%~dp0exporter.py"
+    powershell -NoProfile -Command "Start-Process -FilePath '%~dp0Python\python.exe' -ArgumentList @('"%~dp0exporter.py"') -WorkingDirectory '%~dp0' -WindowStyle Hidden"
+    if errorlevel 1 (
+        echo CHYBA: PLC exporter se nepodarilo spustit.
+        if "%HIDDEN_MODE%"=="0" pause
+        exit /b 1
+    )
     timeout /t 3 /nobreak >nul
 ) else (
     echo Port 8000 uz posloucha - exporter znovu nespoustim.
@@ -50,14 +58,19 @@ powershell -NoProfile -Command "try{$r=Invoke-WebRequest -UseBasicParsing -Uri '
 if errorlevel 1 (
     echo CHYBA: exporter na http://127.0.0.1:8000/metrics neodpovida.
     echo Prometheus nebude spusten.
-    pause
+    if "%HIDDEN_MODE%"=="0" pause
     exit /b 1
 )
 
 powershell -NoProfile -Command "$x=Get-NetTCPConnection -State Listen -LocalPort 9090 -ErrorAction SilentlyContinue; if($x){exit 0}else{exit 1}"
 if errorlevel 1 (
     echo Startuji Prometheus...
-    start "PLC Prometheus" /min "%~dp0prometheus\prometheus.exe" --config.file="%~dp0prometheus\prometheus.runtime.yml" --storage.tsdb.path="%~dp0prometheus\data" --storage.tsdb.retention.time=%PROM_RETENTION_TIME% --storage.tsdb.retention.size=%PROM_RETENTION_SIZE%
+    powershell -NoProfile -Command "$a=@('--config.file="%~dp0prometheus\prometheus.runtime.yml"','--storage.tsdb.path="%~dp0prometheus\data"','--storage.tsdb.retention.time=%PROM_RETENTION_TIME%','--storage.tsdb.retention.size=%PROM_RETENTION_SIZE%'); Start-Process -FilePath '%~dp0prometheus\prometheus.exe' -ArgumentList $a -WorkingDirectory '%~dp0prometheus' -WindowStyle Hidden"
+    if errorlevel 1 (
+        echo CHYBA: Prometheus se nepodarilo spustit.
+        if "%HIDDEN_MODE%"=="0" pause
+        exit /b 1
+    )
     timeout /t 3 /nobreak >nul
 ) else (
     echo Port 9090 uz posloucha - Prometheus znovu nespoustim.
@@ -75,5 +88,5 @@ if errorlevel 1 (
 
 echo.
 echo Data Promethea jsou omezena na %PROM_RETENTION_TIME% nebo %PROM_RETENTION_SIZE% podle toho, co nastane drive.
-pause
+    if "%HIDDEN_MODE%"=="0" pause
 exit /b 0
