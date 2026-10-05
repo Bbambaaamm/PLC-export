@@ -1,0 +1,13 @@
+@echo off
+rem Volitelne lokalni override hodnoty.
+rem Tento soubor prejmenuj na config.cmd pouze pokud nechces pouzit defaulty z aplikace.
+
+rem set "PLC_IP=10.40.36.2"
+rem set "PLC_DB_NUMBER=2000"
+rem set "PLC_DB_SIZE=8122"
+rem set "PLC_START_OFFSET=0"
+rem set "KPI_EXCEL_PATH=I:\Bor\11-Operative\02-ZooRoyal\07-Key Account Rewe Digital\Kapa Planung"
+
+rem Maximalni historie lokalniho Promethea. Plati prvni dosazeny limit.
+rem set "PROM_RETENTION_TIME=30d"
+rem set "PROM_RETENTION_SIZE=512MB"

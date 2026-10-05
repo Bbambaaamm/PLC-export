@@ -1,8 +1,10 @@
 # PLC exportér
 
-**Nasazení na PC v hale:** [Windows — připojení Desktop Commanderu a sbírka příkazů](docs/WINDOWS_START.md).
-Příkazy lze kopírovat přímo z GitHubu; návod zahrnuje přípravu bez Gitu,
-offline závislosti, kontrolu sběru, Grafanu a návrat k původní verzi.
+**Primární nasazení na PC v hale bez admin práv:** [Portable Windows ZIP](docs/PORTABLE_WINDOWS.md).
+GitHub Actions sestaví jeden samostatný balík s embeddable Pythonem, runtime
+knihovnami, Prometheem a `start.bat`; na cílovém PC se nic neinstaluje.
+
+**Diagnostika / ruční fallback / Desktop Commander:** [Windows — připojení a sbírka příkazů](docs/WINDOWS_START.md).
 
 Read-only sběr DB přes Snap7 a export metrik na `/metrics` (port 8000).
 Spouštěcí bod je `python exporter.py`: jedno PLC vlákno, jedno Excel vlákno
