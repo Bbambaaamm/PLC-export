@@ -2,7 +2,7 @@
   "uid": "plc-line-overview",
   "title": "Smartlog · přehled linky",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "timezone": "Europe/Prague",
   "description": "Kompaktní provozní přehled podle původního dashboardu. Čekání není automaticky porucha; BR pozorování nejsou garantované průjezdy. OEE a forecast vyžadují schválený kontrakt a směnový kalendář.",
   "tags": [
@@ -23,7 +23,8 @@
         "label": "Zdroj",
         "type": "datasource",
         "query": "prometheus",
-        "refresh": 1
+        "refresh": 1,
+        "regex": "/^Zoo$/"
       },
       {
         "name": "job",
@@ -1184,11 +1185,6 @@
             {
               "type": "value",
               "options": {
-                "-1": {
-                  "text": "Bez dat",
-                  "color": "gray",
-                  "index": 0
-                },
                 "0": {
                   "text": "Neaktivní",
                   "color": "blue",
@@ -1198,6 +1194,11 @@
                   "text": "Aktivní",
                   "color": "orange",
                   "index": 2
+                },
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
                 }
               }
             }
@@ -4417,11 +4418,6 @@
             {
               "type": "value",
               "options": {
-                "-1": {
-                  "text": "Bez platných dat",
-                  "color": "gray",
-                  "index": 0
-                },
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
@@ -4466,6 +4462,11 @@
                   "text": "Průchod bez etiketování",
                   "color": "purple",
                   "index": 9
+                },
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
                 }
               }
             }
@@ -4982,11 +4983,6 @@
             {
               "type": "value",
               "options": {
-                "-1": {
-                  "text": "Bez dat",
-                  "color": "gray",
-                  "index": 0
-                },
                 "0": {
                   "text": "Neaktivní",
                   "color": "blue",
@@ -4996,6 +4992,11 @@
                   "text": "Aktivní",
                   "color": "orange",
                   "index": 2
+                },
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
                 }
               }
             }
@@ -5515,11 +5516,6 @@
             {
               "type": "value",
               "options": {
-                "-1": {
-                  "text": "Bez dat",
-                  "color": "gray",
-                  "index": 0
-                },
                 "0": {
                   "text": "Vypnuto",
                   "color": "blue",
@@ -5529,6 +5525,11 @@
                   "text": "Bez etiketování",
                   "color": "purple",
                   "index": 2
+                },
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
                 }
               }
             }
@@ -5847,11 +5848,6 @@
             {
               "type": "value",
               "options": {
-                "-1": {
-                  "text": "Bez dat",
-                  "color": "gray",
-                  "index": 0
-                },
                 "0": {
                   "text": "Prázdný",
                   "color": "gray",
@@ -5861,6 +5857,11 @@
                   "text": "Vyplněný",
                   "color": "blue",
                   "index": 2
+                },
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
                 }
               }
             }
