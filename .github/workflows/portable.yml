@@ -64,7 +64,7 @@ jobs:
             gh release delete portable-latest --repo "$env:GITHUB_REPOSITORY" --yes --cleanup-tag
             if ($LASTEXITCODE -ne 0) { throw "Existing portable-latest release could not be removed." }
           }
-          gh release create portable-latest --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "PLC Exporter Portable - latest" --notes "Hotový Windows x64 balík bez instalace a bez admin práv. Stáhni PLC-export-portable-win-x64.zip, rozbal přímo na C:\ a spusť C:\plc_exporter\start.bat."
+          gh release create portable-latest --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "PLC Exporter Portable - latest" --notes "Hotový Windows x64 balík bez instalace a bez admin práv. Stáhni PLC-export-portable-win-x64.zip, rozbal přímo na C:\ a spusť C:\plc_exporter\start-hidden.vbs. PLC Exporter i Prometheus poběží bez viditelných konzolových oken."
           if ($LASTEXITCODE -ne 0) { throw "portable-latest release creation failed." }
           gh release upload portable-latest "dist\PLC-export-portable-win-x64.zip" "dist\SHA256SUMS.txt" --repo "$env:GITHUB_REPOSITORY" --clobber
           if ($LASTEXITCODE -ne 0) { throw "portable-latest asset upload failed." }

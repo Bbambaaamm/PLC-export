@@ -2,9 +2,13 @@ PLC EXPORTER - PORTABLE WINDOWS x64
 
 1. Rozbal celou slozku PLC-export napriklad jako C:\plc_exporter.
 2. Nic neinstaluj. Neni potreba admin, systemovy Python ani PATH.
-3. Dvojklik na start.bat.
+3. Bezny start bez viditelnych CMD/PowerShell oken: dvojklik na start-hidden.vbs.
 4. Kontrola: check.bat.
 5. Zastaveni pouze teto instance: stop.bat.
+
+start.bat zustava jako diagnosticky start s viditelnym oknem.
+start-hidden.vbs spusti stejnou logiku skryte a zapise vystup do var\startup.log.
+PLC Exporter i Prometheus pak bezi bez konzolovych oken na hlavnim panelu.
 
 Python i vsechny runtime knihovny jsou ve slozce Python.
 Prometheus je ve slozce prometheus a uklada data do prometheus\data.
@@ -22,7 +26,7 @@ Prvni nastaveni:
 1. V Grafana Cloud vytvor token v access policy stack-654487-hm-write
    se scope metrics:write.
 2. Dvojklik na grafana-cloud-setup.bat a token vloz do skryteho promptu.
-3. Pokud Prometheus uz bezi, spust stop.bat a potom start.bat.
+3. Pokud Prometheus uz bezi, spust stop.bat a potom start-hidden.vbs.
 
 Token se ulozi do:
 %LOCALAPPDATA%\PLC-export\grafana-cloud.token

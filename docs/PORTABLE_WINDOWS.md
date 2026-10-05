@@ -50,6 +50,8 @@ PLC-export\
 ├── teleskop\
 ├── templates\
 ├── exporter.py
+├── start-hidden.vbs
+├── launch-hidden.ps1
 ├── start.bat
 ├── stop.bat
 ├── check.bat
@@ -92,7 +94,17 @@ Importní část kontroly musí skončit `IMPORT OK`. Kontrola portů přirozen�
 selže, dokud nový exporter ještě neběží.
 
 Pak zastav starou instanci jejím původním způsobem a ověř, že porty 8000 a 9090
-nejsou obsazené. Novou instanci spustíš dvojklikem:
+nejsou obsazené. Novou instanci běžně spustíš dvojklikem:
+
+```text
+start-hidden.vbs
+```
+
+Tento launcher schová CMD/PowerShell okna a spustí PLC Exporter i Prometheus bez
+konzolových oken na hlavním panelu. Startovací výstup je uložen v
+`var\startup.log`.
+
+Pro diagnostiku lze stále použít viditelný:
 
 ```text
 start.bat
