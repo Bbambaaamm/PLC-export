@@ -10,7 +10,7 @@ POSTUP:
    Vznikne C:\desktop_commander
 3. Prvni autorizaci proved pres C:\desktop_commander\start.bat.
 4. Po sparovani pro bezny provoz pouzivej C:\desktop_commander\start-hidden.vbs.
-5. Hidden start nema viditelne CMD/PowerShell okno a loguje do logs\desktop-commander.log.
+5. Hidden start nema viditelne CMD/PowerShell okno. Aktualni log je logs\desktop-commander.log a predchozi beh se uchova jako logs\desktop-commander.previous.log.
 
 Nic se neinstaluje do Windows:
 - vlastni Node.js je uvnitr slozky
