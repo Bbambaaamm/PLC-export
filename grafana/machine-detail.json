@@ -2,7 +2,7 @@
   "uid": "plc-machine-detail",
   "title": "Smartlog · detail zařízení",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "timezone": "Europe/Prague",
   "description": "Kompaktní provozní přehled podle původního dashboardu. Čekání není automaticky porucha; BR pozorování nejsou garantované průjezdy. OEE a forecast vyžadují schválený kontrakt a směnový kalendář.",
   "tags": [
@@ -23,7 +23,8 @@
         "label": "Zdroj",
         "type": "datasource",
         "query": "prometheus",
-        "refresh": 1
+        "refresh": 1,
+        "regex": "/^Zoo$/"
       },
       {
         "name": "job",
@@ -108,7 +109,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(line_machine_state{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "expr": "(line_machine_state{job=\"${job}\",instance=\"${instance}\",station=\"${station}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -132,11 +133,6 @@
             {
               "type": "value",
               "options": {
-                "-1": {
-                  "text": "Bez platných dat",
-                  "color": "gray",
-                  "index": 0
-                },
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
@@ -181,6 +177,11 @@
                   "text": "Průchod bez etiketování",
                   "color": "purple",
                   "index": 9
+                },
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
                 }
               }
             }
@@ -225,7 +226,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "((line_waiting_current_seconds{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "expr": "((line_waiting_current_seconds{job=\"${job}\",instance=\"${instance}\",station=\"${station}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -285,7 +286,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "increase(line_waiting_seconds_total{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}[${__range_s}s])",
+          "expr": "increase(line_waiting_seconds_total{job=\"${job}\",instance=\"${instance}\",station=\"${station}\"}[${__range_s}s])",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -345,7 +346,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(line_machine_state{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "expr": "(line_machine_state{job=\"${job}\",instance=\"${instance}\",station=\"${station}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "{{station}}",
           "instant": false,
           "range": true,
@@ -368,11 +369,6 @@
             {
               "type": "value",
               "options": {
-                "-1": {
-                  "text": "Bez platných dat",
-                  "color": "gray",
-                  "index": 0
-                },
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
@@ -417,6 +413,11 @@
                   "text": "Průchod bez etiketování",
                   "color": "purple",
                   "index": 9
+                },
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 0
                 }
               }
             }
@@ -550,7 +551,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(line_material_active{job=\"${job}\",instance=\"${instance}\",machine=~\"${station:regex}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "expr": "(line_material_active{job=\"${job}\",instance=\"${instance}\",machine=\"${station}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "{{material}} · {{level}}",
           "instant": false,
           "range": true,
@@ -573,11 +574,6 @@
             {
               "type": "value",
               "options": {
-                "-1": {
-                  "text": "Bez dat",
-                  "color": "gray",
-                  "index": 0
-                },
                 "0": {
                   "text": "Neaktivní",
                   "color": "blue",
@@ -587,6 +583,11 @@
                   "text": "Aktivní",
                   "color": "orange",
                   "index": 2
+                },
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 0
                 }
               }
             }
@@ -732,7 +733,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "((line_waiting_coincidence{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "expr": "((line_waiting_coincidence{job=\"${job}\",instance=\"${instance}\",station=\"${station}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
           "legendFormat": "",
           "instant": true,
           "range": false,
@@ -876,7 +877,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "increase(line_machine_state_seconds_total{job=\"${job}\",instance=\"${instance}\",station=~\"${station:regex}\"}[${__range_s}s]) > 0",
+          "expr": "increase(line_machine_state_seconds_total{job=\"${job}\",instance=\"${instance}\",station=\"${station}\"}[${__range_s}s]) > 0",
           "legendFormat": "{{state}}",
           "instant": true,
           "range": false,
