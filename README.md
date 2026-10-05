@@ -117,8 +117,8 @@ resetuje procesové čítače. Tento PR sám neprovádí nasazení ani zápis do
 
 ## Dashboard podle databloku DB2000
 
-- [Přehled linky](grafana/line-overview.json) a [detail zařízení](grafana/machine-detail.json)
-  jsou připravené pro import do Grafany bez externích panelových pluginů.
+- [Provozní přehled](grafana/line-overview.json), [technická diagnostika](grafana/technical-diagnostics.json)
+  a [detail zařízení](grafana/machine-detail.json) jsou připravené pro import do Grafany bez externích panelových pluginů.
 - Sedm BR pozic, opravené S7 STRING, skutečné identifikátory ESTOP,
   materiálové stavy, bypass AKL a časy pozorovaného čekání.
 - `/history` a `/api/events` umožňují hledat pozorování podle BoxID a času.
