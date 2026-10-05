@@ -103,6 +103,24 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Portable Python import smoke test failed." }
     & ".\prometheus\prometheus.exe" --version
     if ($LASTEXITCODE -ne 0) { throw "Prometheus smoke test failed." }
+
+    # Validate both local-only and Grafana Cloud remote_write config syntactically.
+    $promtool = Join-Path $promSource.FullName "promtool.exe"
+    $savedLocalAppData = $env:LOCALAPPDATA
+    try {
+        $env:LOCALAPPDATA = Join-Path $temp "smoke-localappdata"
+        $tokenDir = Join-Path $env:LOCALAPPDATA "PLC-export"
+        New-Item -ItemType Directory -Path $tokenDir -Force | Out-Null
+        [IO.File]::WriteAllText((Join-Path $tokenDir "grafana-cloud.token"), "dummy-ci-token", [Text.UTF8Encoding]::new($false))
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\prepare-prometheus.ps1"
+        if ($LASTEXITCODE -ne 0) { throw "Grafana Cloud runtime config generation failed." }
+        & $promtool check config ".\prometheus\prometheus.runtime.yml"
+        if ($LASTEXITCODE -ne 0) { throw "Grafana Cloud Prometheus config validation failed." }
+    }
+    finally {
+        $env:LOCALAPPDATA = $savedLocalAppData
+        Remove-Item -LiteralPath ".\prometheus\prometheus.runtime.yml" -Force -ErrorAction SilentlyContinue
+    }
 }
 finally {
     Pop-Location
