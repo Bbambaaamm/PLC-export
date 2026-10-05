@@ -18,6 +18,11 @@ echo === ripgrep ===
 if errorlevel 1 set "FAILED=1"
 
 echo.
+echo === Autostart ===
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0autostart.ps1" status
+if errorlevel 1 echo INFO: autostart neni aktivni nebo je neplatny.
+
+echo.
 if "%FAILED%"=="0" (
     echo CHECK OK - portable runtime je pripraven.
     echo Sit a prihlaseni se overi pri startu Remote MCP; prvni OAuth pres start.bat, bezny provoz pres start-hidden.vbs.
