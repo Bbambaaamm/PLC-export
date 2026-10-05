@@ -9,8 +9,6 @@ on:
       - "scripts/build_desktop_commander_portable.ps1"
       - "docs/DESKTOP_COMMANDER_PORTABLE.md"
   push:
-    branches:
-      - main
     paths:
       - ".github/workflows/desktop-commander-portable.yml"
       - "desktop_commander/**"
