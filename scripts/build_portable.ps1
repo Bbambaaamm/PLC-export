@@ -110,7 +110,7 @@ $sevenZip = Get-Command 7z.exe -ErrorAction SilentlyContinue
 if ($sevenZip) {
     Push-Location $OutputDir
     try {
-        & $sevenZip.Source a -tzip -mx=9 -mfb=258 -mpass=15 (Split-Path -Leaf $zipPath) "plc_exporter\*" | Out-Host
+        & $sevenZip.Source a -tzip -mx=9 -mfb=258 -mpass=15 (Split-Path -Leaf $zipPath) "plc_exporter" | Out-Host
         if ($LASTEXITCODE -ne 0) { throw "7-Zip creation failed." }
     }
     finally {
@@ -119,6 +119,17 @@ if ($sevenZip) {
 }
 else {
     Compress-Archive -Path $stage -DestinationPath $zipPath -CompressionLevel Optimal
+}
+
+# Ověř, že rozbalení ZIPu přímo na C:\ vytvoří C:\plc_exporter\start.bat.
+$verifyDir = Join-Path $temp "zip-verify"
+Remove-Item -LiteralPath $verifyDir -Recurse -Force -ErrorAction SilentlyContinue
+Expand-Archive -LiteralPath $zipPath -DestinationPath $verifyDir
+if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\start.bat"))) {
+    throw "ZIP root validation failed: plc_exporter\start.bat was not found."
+}
+if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\Python\python.exe"))) {
+    throw "ZIP root validation failed: portable Python was not found."
 }
 
 $zip = Get-Item -LiteralPath $zipPath
