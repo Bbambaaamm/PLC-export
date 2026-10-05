@@ -16,21 +16,32 @@ C:\desktop_commander\
 ├── app\
 │   └── node_modules\...
 ├── start.bat
+├── start-hidden.vbs
 ├── check.bat
 ├── debug.bat
 ├── logout.bat
 └── VERSION.txt
 ```
 
-5. Dvojklik na:
+5. První autorizaci spusť přes:
 
 ```text
 C:\desktop_commander\start.bat
 ```
 
-Při prvním spuštění Desktop Commander otevře OAuth autorizaci v prohlížeči.
-Zkontroluj, že kód v prohlížeči odpovídá kódu v terminálu, přihlas se ke
-správnému Desktop Commander účtu a zařízení potvrď. Potom okno nech otevřené.
+Desktop Commander otevře OAuth autorizaci v prohlížeči. Zkontroluj, že kód v
+prohlížeči odpovídá kódu v terminálu, přihlas se ke správnému účtu a zařízení
+potvrď.
+
+6. Po spárování používej pro běžný provoz:
+
+```text
+C:\desktop_commander\start-hidden.vbs
+```
+
+Tento launcher nemá viditelné CMD/PowerShell okno. Aktuální běh loguje do
+`logs\desktop-commander.log`; předchozí běh se zachová jako
+`logs\desktop-commander.previous.log`.
 
 Další spuštění standardně použije uloženou session v profilu Windows uživatele.
 
@@ -59,8 +70,8 @@ Kontrola ověřuje:
 - `desktop-commander remote --help`,
 - dostupnost přibaleného ripgrep.
 
-Skutečné spojení s Remote MCP lze ověřit až přes `start.bat`, protože vyžaduje
-síť a při prvním spuštění autorizaci.
+Skutečné spojení s Remote MCP vyžaduje síť. První autorizaci proveď přes
+`start.bat`; po spárování používej `start-hidden.vbs`.
 
 ## Firemní omezení
 
