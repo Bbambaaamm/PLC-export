@@ -5,3 +5,5 @@ __pycache__/
 .env
 var/
 *.sqlite3*
+config.cmd
+config.boot.cmd

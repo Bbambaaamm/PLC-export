@@ -32,6 +32,7 @@ New-Item -ItemType Directory -Path (Join-Path $stage "var") | Out-Null
 Write-Host "== Portable launchers =="
 Copy-Item -LiteralPath (Join-Path $root "portable\start.bat") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\start-hidden.vbs") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\start-boot.vbs") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\launch-hidden.ps1") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\autostart.ps1") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\autostart-enable.bat") -Destination $stage
@@ -110,6 +111,19 @@ try {
     & ".\prometheus\prometheus.exe" --version
     if ($LASTEXITCODE -ne 0) { throw "Prometheus smoke test failed." }
 
+    foreach ($scriptName in @("autostart.ps1","launch-hidden.ps1","prepare-prometheus.ps1","grafana-cloud-setup.ps1")) {
+        $tokens = $null
+        $errors = $null
+        [void][System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path (Get-Location).Path $scriptName),
+            [ref]$tokens,
+            [ref]$errors
+        )
+        if ($errors.Count -gt 0) {
+            throw ("PowerShell syntax check failed for " + $scriptName + ": " + ($errors | ForEach-Object { $_.Message } | Out-String))
+        }
+    }
+
     # Validate both local-only and Grafana Cloud remote_write config syntactically.
     $promtool = Join-Path $promSource.FullName "promtool.exe"
     $savedLocalAppData = $env:LOCALAPPDATA
@@ -157,6 +171,9 @@ if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\start.bat")
 }
 if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\start-hidden.vbs"))) {
     throw "ZIP root validation failed: plc_exporter\start-hidden.vbs was not found."
+}
+if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\start-boot.vbs"))) {
+    throw "ZIP root validation failed: plc_exporter\start-boot.vbs was not found."
 }
 if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\launch-hidden.ps1"))) {
     throw "ZIP root validation failed: plc_exporter\launch-hidden.ps1 was not found."

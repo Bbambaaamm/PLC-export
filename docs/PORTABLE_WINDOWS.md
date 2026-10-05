@@ -51,6 +51,7 @@ PLC-export\
 ├── templates\
 ├── exporter.py
 ├── start-hidden.vbs
+├── start-boot.vbs
 ├── launch-hidden.ps1
 ├── autostart.ps1
 ├── autostart-enable.bat
@@ -120,7 +121,7 @@ Po startu znovu spusť:
 check.bat
 ```
 
-## Automatické spuštění bez admin práv
+## Chytrý autostart: boot task + fallback
 
 Až bude složka definitivně jako `C:\plc_exporter`, spusť jednou:
 
@@ -128,16 +129,35 @@ Až bude složka definitivně jako `C:\plc_exporter`, spusť jednou:
 autostart-enable.bat
 ```
 
-Vytvoří se uživatelský zástupce `PLC Exporter.lnk` ve standardní Windows
-Startup složce. Po restartu Windows se `start-hidden.vbs` automaticky spustí
-**po přihlášení stejného uživatele**, bez administrátorských práv a bez
-Windows služby.
+Skript postupuje ve dvou úrovních:
+
+1. **BOOT TASK** — pokusí se vytvořit Windows Task Scheduler úlohu spuštěnou
+   při startu systému pod aktuálním Windows uživatelem. Setup jednou požádá
+   o Windows heslo, protože úloha musí umět běžet i bez přihlášení. Heslo se
+   nezapisuje do ZIPu, `config.cmd` ani logů; předává se Windows Task
+   Scheduleru.
+2. **STARTUP FALLBACK** — pokud vytvoření boot tasku zablokují práva nebo
+   firemní politika, automaticky se vytvoří uživatelský zástupce ve Windows
+   Startup složce. Tato varianta běží po přihlášení a nevyžaduje admin práva.
+
+Úloha záměrně **neběží pod SYSTEM**, aby proces nepřebíral vyšší oprávnění a
+zůstal v kontextu stejného uživatele jako Grafana Cloud token.
+
+Výchozí KPI Excel cesta používá mapovaný disk `I:\`. Mapované disky nejsou
+před interaktivním přihlášením spolehlivě dostupné. Setup proto při aktivaci
+BOOT TASKu zjistí UNC cíl mapovaného disku a vytvoří lokální
+`config.boot.cmd`, který pouze pro boot režim přepíše `KPI_EXCEL_PATH` na
+UNC. Pokud mapování nelze bezpečně převést, BOOT TASK se nepoužije a aktivuje
+se Startup fallback.
 
 Stav ověříš přes:
 
 ```text
 autostart-status.bat
 ```
+
+Výstup ukáže `MODE: BOOT TASK`, `MODE: STARTUP FALLBACK` nebo
+`MODE: DISABLED`.
 
 Vypnutí:
 
