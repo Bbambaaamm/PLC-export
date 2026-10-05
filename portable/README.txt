@@ -3,7 +3,7 @@ PLC EXPORTER - PORTABLE WINDOWS x64
 1. Rozbal celou slozku PLC-export napriklad jako C:\plc_exporter.
 2. Nic neinstaluj. Neni potreba admin, systemovy Python ani PATH.
 3. Bezny start bez viditelnych CMD/PowerShell oken: dvojklik na start-hidden.vbs.
-4. Kontrola: check.bat.
+4. Kontrola: check.bat (overi vlastnika portu, PLC metriky, Prometheus a stav autostartu).
 5. Jednorazove zapnuti chytreho autostartu: autostart-enable.bat.
 6. Kontrola autostartu: autostart-status.bat.
 7. Vypnuti autostartu: autostart-disable.bat.
