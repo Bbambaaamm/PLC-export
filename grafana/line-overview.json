@@ -942,17 +942,17 @@
                 "0": {
                   "text": "● OK",
                   "color": "green",
-                  "index": 1
+                  "index": 0
                 },
                 "1": {
                   "text": "● ESTOP",
                   "color": "red",
-                  "index": 2
+                  "index": 1
                 },
                 "-1": {
                   "text": "● Bez dat",
                   "color": "gray",
-                  "index": 0
+                  "index": 2
                 }
               }
             }
