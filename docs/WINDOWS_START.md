@@ -5,6 +5,10 @@ kopírování vpravo nahoře a vlož celý blok do **Windows PowerShellu 5.1**.
 Začni běžným účtem, bez správce. Postupuj po jednotlivých krocích.
 Adresy a cesty si příkazy vyžádají; nemusíš je upravovat uvnitř kódu.
 
+> **Primární způsob nasazení je nyní hotový portable ZIP bez instalace a bez admin práv.**
+> Viz [PORTABLE_WINDOWS.md](PORTABLE_WINDOWS.md). Tento dokument ponecháváme jako
+> diagnostický a ruční fallback, případně pro připojení Remote Desktop Commanderu.
+
 **Nejkratší cesta:** kroky 1–2 připojí PC. Potom napiš do chatu
 „PC v hale je připojené“ a jeho název. Další kroky můžeme provést společně.
 Když připojení nepůjde, kroky 3–8 umožní ruční nasazení.
