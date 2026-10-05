@@ -35,6 +35,7 @@ if "%HIDDEN_MODE%"=="0" (
 set "RC=%ERRORLEVEL%"
 echo.
 if not "%RC%"=="0" echo Desktop Commander skoncil s kodem %RC%.
-echo Pro znovupripojeni spust znovu start.bat.
+if "%HIDDEN_MODE%"=="0" echo Pro znovupripojeni spust znovu start.bat.
+if "%HIDDEN_MODE%"=="1" echo Pro znovupripojeni spust znovu start-hidden.vbs.
 if "%HIDDEN_MODE%"=="0" pause
 exit /b %RC%
