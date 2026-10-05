@@ -747,52 +747,52 @@
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "Připraveno",
                   "color": "green",
-                  "index": 1
+                  "index": 2
                 },
                 "2": {
                   "text": "Chod potvrzen",
                   "color": "green",
-                  "index": 2
+                  "index": 3
                 },
                 "3": {
                   "text": "Čekání před zařízením",
                   "color": "yellow",
-                  "index": 3
+                  "index": 4
                 },
                 "4": {
                   "text": "Doplňte materiál",
                   "color": "orange",
-                  "index": 4
+                  "index": 5
                 },
                 "5": {
                   "text": "Materiál došel",
                   "color": "red",
-                  "index": 5
+                  "index": 6
                 },
                 "6": {
                   "text": "Chyba stroje",
                   "color": "red",
-                  "index": 6
+                  "index": 7
                 },
                 "7": {
                   "text": "Bezpečnost nepřipravena",
                   "color": "red",
-                  "index": 7
+                  "index": 8
                 },
                 "8": {
                   "text": "Průchod bez etiketování",
                   "color": "purple",
-                  "index": 8
+                  "index": 9
                 },
                 "-1": {
                   "text": "Bez platných dat",
                   "color": "gray",
-                  "index": 9
+                  "index": 0
                 }
               }
             }
@@ -966,52 +966,52 @@
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "Připraveno",
                   "color": "green",
-                  "index": 1
+                  "index": 2
                 },
                 "2": {
                   "text": "Chod potvrzen",
                   "color": "green",
-                  "index": 2
+                  "index": 3
                 },
                 "3": {
                   "text": "Čekání před zařízením",
                   "color": "yellow",
-                  "index": 3
+                  "index": 4
                 },
                 "4": {
                   "text": "Doplňte materiál",
                   "color": "orange",
-                  "index": 4
+                  "index": 5
                 },
                 "5": {
                   "text": "Materiál došel",
                   "color": "red",
-                  "index": 5
+                  "index": 6
                 },
                 "6": {
                   "text": "Chyba stroje",
                   "color": "red",
-                  "index": 6
+                  "index": 7
                 },
                 "7": {
                   "text": "Bezpečnost nepřipravena",
                   "color": "red",
-                  "index": 7
+                  "index": 8
                 },
                 "8": {
                   "text": "Průchod bez etiketování",
                   "color": "purple",
-                  "index": 8
+                  "index": 9
                 },
                 "-1": {
                   "text": "Bez platných dat",
                   "color": "gray",
-                  "index": 9
+                  "index": 0
                 }
               }
             }
@@ -1089,52 +1089,52 @@
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "Připraveno",
                   "color": "green",
-                  "index": 1
+                  "index": 2
                 },
                 "2": {
                   "text": "Chod potvrzen",
                   "color": "green",
-                  "index": 2
+                  "index": 3
                 },
                 "3": {
                   "text": "Čekání před zařízením",
                   "color": "yellow",
-                  "index": 3
+                  "index": 4
                 },
                 "4": {
                   "text": "Doplňte materiál",
                   "color": "orange",
-                  "index": 4
+                  "index": 5
                 },
                 "5": {
                   "text": "Materiál došel",
                   "color": "red",
-                  "index": 5
+                  "index": 6
                 },
                 "6": {
                   "text": "Chyba stroje",
                   "color": "red",
-                  "index": 6
+                  "index": 7
                 },
                 "7": {
                   "text": "Bezpečnost nepřipravena",
                   "color": "red",
-                  "index": 7
+                  "index": 8
                 },
                 "8": {
                   "text": "Průchod bez etiketování",
                   "color": "purple",
-                  "index": 8
+                  "index": 9
                 },
                 "-1": {
                   "text": "Bez platných dat",
                   "color": "gray",
-                  "index": 9
+                  "index": 0
                 }
               }
             }
@@ -1212,52 +1212,52 @@
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "Připraveno",
                   "color": "green",
-                  "index": 1
+                  "index": 2
                 },
                 "2": {
                   "text": "Chod potvrzen",
                   "color": "green",
-                  "index": 2
+                  "index": 3
                 },
                 "3": {
                   "text": "Čekání před zařízením",
                   "color": "yellow",
-                  "index": 3
+                  "index": 4
                 },
                 "4": {
                   "text": "Doplňte materiál",
                   "color": "orange",
-                  "index": 4
+                  "index": 5
                 },
                 "5": {
                   "text": "Materiál došel",
                   "color": "red",
-                  "index": 5
+                  "index": 6
                 },
                 "6": {
                   "text": "Chyba stroje",
                   "color": "red",
-                  "index": 6
+                  "index": 7
                 },
                 "7": {
                   "text": "Bezpečnost nepřipravena",
                   "color": "red",
-                  "index": 7
+                  "index": 8
                 },
                 "8": {
                   "text": "Průchod bez etiketování",
                   "color": "purple",
-                  "index": 8
+                  "index": 9
                 },
                 "-1": {
                   "text": "Bez platných dat",
                   "color": "gray",
-                  "index": 9
+                  "index": 0
                 }
               }
             }
@@ -1335,52 +1335,52 @@
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "Připraveno",
                   "color": "green",
-                  "index": 1
+                  "index": 2
                 },
                 "2": {
                   "text": "Chod potvrzen",
                   "color": "green",
-                  "index": 2
+                  "index": 3
                 },
                 "3": {
                   "text": "Čekání před zařízením",
                   "color": "yellow",
-                  "index": 3
+                  "index": 4
                 },
                 "4": {
                   "text": "Doplňte materiál",
                   "color": "orange",
-                  "index": 4
+                  "index": 5
                 },
                 "5": {
                   "text": "Materiál došel",
                   "color": "red",
-                  "index": 5
+                  "index": 6
                 },
                 "6": {
                   "text": "Chyba stroje",
                   "color": "red",
-                  "index": 6
+                  "index": 7
                 },
                 "7": {
                   "text": "Bezpečnost nepřipravena",
                   "color": "red",
-                  "index": 7
+                  "index": 8
                 },
                 "8": {
                   "text": "Průchod bez etiketování",
                   "color": "purple",
-                  "index": 8
+                  "index": 9
                 },
                 "-1": {
                   "text": "Bez platných dat",
                   "color": "gray",
-                  "index": 9
+                  "index": 0
                 }
               }
             }
@@ -1458,52 +1458,52 @@
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "Připraveno",
                   "color": "green",
-                  "index": 1
+                  "index": 2
                 },
                 "2": {
                   "text": "Chod potvrzen",
                   "color": "green",
-                  "index": 2
+                  "index": 3
                 },
                 "3": {
                   "text": "Čekání před zařízením",
                   "color": "yellow",
-                  "index": 3
+                  "index": 4
                 },
                 "4": {
                   "text": "Doplňte materiál",
                   "color": "orange",
-                  "index": 4
+                  "index": 5
                 },
                 "5": {
                   "text": "Materiál došel",
                   "color": "red",
-                  "index": 5
+                  "index": 6
                 },
                 "6": {
                   "text": "Chyba stroje",
                   "color": "red",
-                  "index": 6
+                  "index": 7
                 },
                 "7": {
                   "text": "Bezpečnost nepřipravena",
                   "color": "red",
-                  "index": 7
+                  "index": 8
                 },
                 "8": {
                   "text": "Průchod bez etiketování",
                   "color": "purple",
-                  "index": 8
+                  "index": 9
                 },
                 "-1": {
                   "text": "Bez platných dat",
                   "color": "gray",
-                  "index": 9
+                  "index": 0
                 }
               }
             }
@@ -1581,52 +1581,52 @@
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "Připraveno",
                   "color": "green",
-                  "index": 1
+                  "index": 2
                 },
                 "2": {
                   "text": "Chod potvrzen",
                   "color": "green",
-                  "index": 2
+                  "index": 3
                 },
                 "3": {
                   "text": "Čekání před zařízením",
                   "color": "yellow",
-                  "index": 3
+                  "index": 4
                 },
                 "4": {
                   "text": "Doplňte materiál",
                   "color": "orange",
-                  "index": 4
+                  "index": 5
                 },
                 "5": {
                   "text": "Materiál došel",
                   "color": "red",
-                  "index": 5
+                  "index": 6
                 },
                 "6": {
                   "text": "Chyba stroje",
                   "color": "red",
-                  "index": 6
+                  "index": 7
                 },
                 "7": {
                   "text": "Bezpečnost nepřipravena",
                   "color": "red",
-                  "index": 7
+                  "index": 8
                 },
                 "8": {
                   "text": "Průchod bez etiketování",
                   "color": "purple",
-                  "index": 8
+                  "index": 9
                 },
                 "-1": {
                   "text": "Bez platných dat",
                   "color": "gray",
-                  "index": 9
+                  "index": 0
                 }
               }
             }
@@ -1704,52 +1704,52 @@
                 "0": {
                   "text": "Bez potvrzení chodu",
                   "color": "gray",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "Připraveno",
                   "color": "green",
-                  "index": 1
+                  "index": 2
                 },
                 "2": {
                   "text": "Chod potvrzen",
                   "color": "green",
-                  "index": 2
+                  "index": 3
                 },
                 "3": {
                   "text": "Čekání před zařízením",
                   "color": "yellow",
-                  "index": 3
+                  "index": 4
                 },
                 "4": {
                   "text": "Doplňte materiál",
                   "color": "orange",
-                  "index": 4
+                  "index": 5
                 },
                 "5": {
                   "text": "Materiál došel",
                   "color": "red",
-                  "index": 5
+                  "index": 6
                 },
                 "6": {
                   "text": "Chyba stroje",
                   "color": "red",
-                  "index": 6
+                  "index": 7
                 },
                 "7": {
                   "text": "Bezpečnost nepřipravena",
                   "color": "red",
-                  "index": 7
+                  "index": 8
                 },
                 "8": {
                   "text": "Průchod bez etiketování",
                   "color": "purple",
-                  "index": 8
+                  "index": 9
                 },
                 "-1": {
                   "text": "Bez platných dat",
                   "color": "gray",
-                  "index": 9
+                  "index": 0
                 }
               }
             }
@@ -1840,17 +1840,17 @@
                 "0": {
                   "text": "●",
                   "color": "green",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "●",
                   "color": "red",
-                  "index": 1
+                  "index": 2
                 },
                 "-1": {
                   "text": "●",
                   "color": "gray",
-                  "index": 2
+                  "index": 0
                 }
               }
             }
@@ -1979,17 +1979,17 @@
                 "0": {
                   "text": "●",
                   "color": "green",
-                  "index": 0
+                  "index": 1
                 },
                 "1": {
                   "text": "●",
                   "color": "red",
-                  "index": 1
+                  "index": 2
                 },
                 "-1": {
                   "text": "●",
                   "color": "gray",
-                  "index": 2
+                  "index": 0
                 }
               }
             }
