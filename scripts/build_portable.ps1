@@ -35,6 +35,9 @@ Copy-Item -LiteralPath (Join-Path $root "portable\stop.bat") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\check.bat") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\config.cmd.example") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\README.txt") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\prepare-prometheus.ps1") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\grafana-cloud-setup.ps1") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\grafana-cloud-setup.bat") -Destination $stage
 
 Write-Host "== Python embeddable $PythonVersion =="
 $pythonZip = Join-Path $temp "python-embed.zip"
