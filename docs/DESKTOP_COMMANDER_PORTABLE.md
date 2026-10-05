@@ -17,6 +17,10 @@ C:\desktop_commander\
 │   └── node_modules\...
 ├── start.bat
 ├── start-hidden.vbs
+├── autostart.ps1
+├── autostart-enable.bat
+├── autostart-disable.bat
+├── autostart-status.bat
 ├── check.bat
 ├── debug.bat
 ├── logout.bat
@@ -44,6 +48,35 @@ Tento launcher nemá viditelné CMD/PowerShell okno. Aktuální běh loguje do
 `logs\desktop-commander.previous.log`.
 
 Další spuštění standardně použije uloženou session v profilu Windows uživatele.
+
+## Automatický skrytý start po přihlášení
+
+Po úspěšném prvním OAuth spárování spusť jednou:
+
+```text
+C:\desktop_commander\autostart-enable.bat
+```
+
+Vytvoří uživatelský zástupce `Desktop Commander.lnk` ve standardní Windows
+Startup složce. Po každém přihlášení stejného Windows uživatele se spustí
+`start-hidden.vbs` bez viditelného CMD/PowerShell okna a bez admin práv.
+
+Stav:
+
+```text
+C:\desktop_commander\autostart-status.bat
+```
+
+Očekávaný aktivní stav je `MODE: STARTUP`.
+
+Vypnutí:
+
+```text
+C:\desktop_commander\autostart-disable.bat
+```
+
+Tento autostart je záměrně po přihlášení, protože OAuth session Desktop
+Commanderu je uložená v profilu konkrétního Windows uživatele.
 
 ## Co se na cílovém PC neinstaluje
 
