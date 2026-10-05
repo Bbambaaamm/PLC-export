@@ -61,7 +61,7 @@ jobs:
             gh release delete desktop-commander-portable-latest --repo "$env:GITHUB_REPOSITORY" --yes --cleanup-tag
             if ($LASTEXITCODE -ne 0) { throw "Existing Desktop Commander release could not be removed." }
           }
-          gh release create desktop-commander-portable-latest --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "Desktop Commander Portable - latest" --notes "Windows x64 portable balík bez instalace a bez admin práv. Stáhni Desktop-Commander-Portable-win-x64.zip, rozbal přímo na C:\ a spusť C:\desktop_commander\start.bat. První spuštění vyžaduje OAuth autorizaci v prohlížeči."
+          gh release create desktop-commander-portable-latest --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title "Desktop Commander Portable - latest" --notes "Windows x64 portable balík bez instalace a bez admin práv. Stáhni Desktop-Commander-Portable-win-x64.zip a rozbal přímo na C:\. První OAuth proveď přes C:\desktop_commander\start.bat; pro běžný provoz potom používej C:\desktop_commander\start-hidden.vbs bez viditelného konzolového okna."
           if ($LASTEXITCODE -ne 0) { throw "Desktop Commander release creation failed." }
           gh release upload desktop-commander-portable-latest "dist-desktop-commander\Desktop-Commander-Portable-win-x64.zip" "dist-desktop-commander\SHA256SUMS.txt" --repo "$env:GITHUB_REPOSITORY" --clobber
           if ($LASTEXITCODE -ne 0) { throw "Desktop Commander release upload failed." }

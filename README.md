@@ -2,14 +2,14 @@
 
 **Primární nasazení na PC v hale bez admin práv:** [Portable Windows ZIP](docs/PORTABLE_WINDOWS.md).
 GitHub Actions sestaví jeden samostatný balík s embeddable Pythonem, runtime
-knihovnami, Prometheem a `start.bat`; na cílovém PC se nic neinstaluje.
+knihovnami, Prometheem a `start-hidden.vbs`; `start.bat` zůstává pro diagnostiku.
 
 **Diagnostika / ruční fallback / Desktop Commander:** [Windows — připojení a sbírka příkazů](docs/WINDOWS_START.md).
 
 **Portable Remote Desktop Commander bez admin práv:** [Desktop Commander Portable](docs/DESKTOP_COMMANDER_PORTABLE.md).
 
 Read-only sběr DB přes Snap7 a export metrik na `/metrics` (port 8000).
-Spouštěcí bod je `python exporter.py`: jedno PLC vlákno, jedno Excel vlákno
+Spouštěcí bod je `python exporter.py`: jedno PLC vlákno, jedno Excel vlákno,
 vlákno archivu SQLite a HTTP obsluha. Samotný import Flask aplikace PLC ani Excel sběr nespustí.
 
 ## Instalace a ověření

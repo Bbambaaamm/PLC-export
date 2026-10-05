@@ -7,3 +7,6 @@ var/
 *.sqlite3*
 config.cmd
 config.boot.cmd
+dist/
+dist-desktop-commander/
+desktop_commander/logs/

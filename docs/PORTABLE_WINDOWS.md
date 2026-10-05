@@ -53,6 +53,7 @@ PLC-export\
 ├── start-hidden.vbs
 ├── start-boot.vbs
 ├── launch-hidden.ps1
+├── runtime-check.ps1
 ├── autostart.ps1
 ├── autostart-enable.bat
 ├── autostart-disable.bat
@@ -120,6 +121,10 @@ Po startu znovu spusť:
 ```text
 check.bat
 ```
+
+Kontrola ověřuje nejen HTTP odpověď, ale i to, že porty 8000 a 9090 vlastní
+procesy z této portable složky a že `/metrics` obsahuje očekávané PLC metriky.
+Cizí proces na stejném portu je chyba, ne platná běžící instance.
 
 ## Chytrý autostart: boot task + fallback
 

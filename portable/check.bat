@@ -15,13 +15,23 @@ if errorlevel 1 set "FAILED=1"
 
 echo.
 echo === PLC exporter /metrics ===
-powershell -NoProfile -Command "try{$r=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8000/metrics' -TimeoutSec 5 -ErrorAction Stop; ($r.Content -split [Environment]::NewLine) | Select-String '^(plc_data_valid|plc_poll_total|plc_data_staleness_seconds|excel_data_valid|event_journal_healthy) '; exit 0}catch{Write-Host $_.Exception.Message; exit 1}"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode port -Port 8000 -ExpectedExecutable "%~dp0Python\python.exe"
+if errorlevel 1 (
+    set "FAILED=1"
+) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode exporter-health
+)
 if errorlevel 1 set "FAILED=1"
 
 echo.
 echo === Prometheus ===
-powershell -NoProfile -Command "try{$r=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:9090/-/healthy' -TimeoutSec 5 -ErrorAction Stop; Write-Host $r.Content; exit 0}catch{Write-Host $_.Exception.Message; exit 1}"
-if errorlevel 1 set "FAILED=1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode port -Port 9090 -ExpectedExecutable "%~dp0prometheus\prometheus.exe"
+if errorlevel 1 (
+    set "FAILED=1"
+) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode prometheus-health
+    if errorlevel 1 set "FAILED=1"
+)
 
 echo.
 echo === Grafana Cloud ===
@@ -29,7 +39,7 @@ if exist "%LOCALAPPDATA%\PLC-export\grafana-cloud.token" (
     echo Token: ulozen mimo C:\plc_exporter
     findstr /C:"remote_write:" "%~dp0prometheus\prometheus.runtime.yml" >nul 2>&1
     if errorlevel 1 (
-        echo VAROVANI: runtime config nema remote_write. Restartuj stop.bat + start.bat.
+        echo VAROVANI: runtime config nema remote_write. Restartuj stop.bat + start-hidden.vbs.
     ) else (
         echo remote_write: nakonfigurovan
     )
@@ -37,6 +47,11 @@ if exist "%LOCALAPPDATA%\PLC-export\grafana-cloud.token" (
     echo Grafana Cloud: token zatim neni ulozen.
     echo Jednou spust grafana-cloud-setup.bat.
 )
+
+echo.
+echo === Autostart ===
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0autostart.ps1" status
+if errorlevel 1 echo INFO: autostart neni aktivni; runtime muze byt presto v poradku.
 
 echo.
 if "%FAILED%"=="0" (

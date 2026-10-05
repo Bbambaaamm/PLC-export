@@ -123,7 +123,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Testy selhaly. Nespoustet exporter.' }
 ```
 
 Není potřeba `Activate.ps1` ani změna ExecutionPolicy. Testy používají simulované
-DB a nepřipojují se k PLC. Očekáváno **43 úspěšných testů** této verze.
+DB a nepřipojují se k PLC. Očekáváno **44 úspěšných testů** této verze.
 
 ### Když PC nemá přístup k Python balíčkům
 

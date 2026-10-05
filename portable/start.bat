@@ -48,8 +48,13 @@ if not defined EVENT_DB_PATH set "EVENT_DB_PATH=%~dp0var\observations.sqlite3"
 if not defined PROM_RETENTION_TIME set "PROM_RETENTION_TIME=30d"
 if not defined PROM_RETENTION_SIZE set "PROM_RETENTION_SIZE=512MB"
 
-powershell -NoProfile -Command "$x=Get-NetTCPConnection -State Listen -LocalPort 8000 -ErrorAction SilentlyContinue; if($x){exit 0}else{exit 1}"
-if errorlevel 1 (
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode port -Port 8000 -ExpectedExecutable "%~dp0Python\python.exe"
+set "PORT8000_RC=%ERRORLEVEL%"
+if "%PORT8000_RC%"=="2" (
+    if "%HIDDEN_MODE%"=="0" pause
+    exit /b 1
+)
+if "%PORT8000_RC%"=="1" (
     echo Startuji PLC exporter...
     powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0launch-hidden.ps1" exporter
     if errorlevel 1 (
@@ -59,10 +64,10 @@ if errorlevel 1 (
     )
     timeout /t 3 /nobreak >nul
 ) else (
-    echo Port 8000 uz posloucha - exporter znovu nespoustim.
+    echo Port 8000 uz pouziva tato instance PLC Exporteru - znovu nespoustim.
 )
 
-powershell -NoProfile -Command "try{$r=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8000/metrics' -TimeoutSec 5 -ErrorAction Stop; if($r.StatusCode -eq 200){exit 0}else{exit 1}}catch{exit 1}"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode exporter-health
 if errorlevel 1 (
     echo CHYBA: exporter na http://127.0.0.1:8000/metrics neodpovida.
     echo Prometheus nebude spusten.
@@ -70,8 +75,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
-powershell -NoProfile -Command "$x=Get-NetTCPConnection -State Listen -LocalPort 9090 -ErrorAction SilentlyContinue; if($x){exit 0}else{exit 1}"
-if errorlevel 1 (
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode port -Port 9090 -ExpectedExecutable "%~dp0prometheus\prometheus.exe"
+set "PORT9090_RC=%ERRORLEVEL%"
+if "%PORT9090_RC%"=="2" (
+    if "%HIDDEN_MODE%"=="0" pause
+    exit /b 1
+)
+if "%PORT9090_RC%"=="1" (
     echo Startuji Prometheus...
     powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0launch-hidden.ps1" prometheus
     if errorlevel 1 (
@@ -81,10 +91,10 @@ if errorlevel 1 (
     )
     timeout /t 3 /nobreak >nul
 ) else (
-    echo Port 9090 uz posloucha - Prometheus znovu nespoustim.
+    echo Port 9090 uz pouziva tato instance Promethea - znovu nespoustim.
 )
 
-powershell -NoProfile -Command "try{$r=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:9090/-/healthy' -TimeoutSec 5 -ErrorAction Stop; if($r.StatusCode -eq 200){exit 0}else{exit 1}}catch{exit 1}"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0runtime-check.ps1" -Mode prometheus-health
 if errorlevel 1 (
     echo VAROVANI: Prometheus zatim neodpovida na portu 9090.
     echo Spust check.bat za nekolik sekund.
