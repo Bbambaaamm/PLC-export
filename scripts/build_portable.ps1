@@ -51,7 +51,8 @@ if ($LASTEXITCODE -ne 0) { throw "Runtime dependency install failed." }
 
 $pth = Get-ChildItem -LiteralPath $pythonDir -Filter "python*._pth" | Select-Object -First 1
 if (-not $pth) { throw "Embeddable Python _pth file was not found." }
-$zipStdlib = "python" + ($PythonVersion.Split(".")[0..1] -join "") + ".zip"
+$versionParts = $PythonVersion.Split(".")
+$zipStdlib = "python" + (($versionParts[0], $versionParts[1]) -join "") + ".zip"
 @(
     $zipStdlib
     "."
