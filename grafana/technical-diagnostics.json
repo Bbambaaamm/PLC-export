@@ -1,0 +1,3264 @@
+{
+  "uid": "plc-technical-diagnostics",
+  "title": "Smartlog · technická diagnostika",
+  "schemaVersion": 39,
+  "version": 4,
+  "timezone": "Europe/Prague",
+  "description": "Profesionální provozní přehled Smartlog linky. Overview zobrazuje pouze rozhodovací informace; detailní PLC signály jsou oddělené v diagnostice. Čekání není automaticky porucha a BR pozorování nejsou garantované fyzické průjezdy.",
+  "tags": [
+    "PLC",
+    "DB2000",
+    "Smartlog"
+  ],
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "label": "Zdroj",
+        "type": "datasource",
+        "query": "prometheus",
+        "regex": "/^Zoo$/",
+        "refresh": 1
+      },
+      {
+        "name": "job",
+        "label": "Exportér",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "query": "label_values(plc_data_valid, job)",
+        "refresh": 1,
+        "multi": false,
+        "includeAll": false
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "query": "label_values(plc_data_valid{job=\"${job}\"}, instance)",
+        "refresh": 1,
+        "multi": false,
+        "includeAll": false
+      },
+      {
+        "name": "history_url",
+        "label": "Adresa historie",
+        "type": "textbox",
+        "hide": 2,
+        "query": "http://EXPORTER:8000/history",
+        "current": {
+          "text": "http://EXPORTER:8000/history",
+          "value": "http://EXPORTER:8000/history"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "Detailní signály zařízení",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 101,
+      "title": "Gebhardt / Smartlog",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 4,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((M1{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Pohon M1",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((M2{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Pohon M2",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((smartlog_zapnut{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Dopravník",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((vahaChod{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Chod váhy",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "●",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pohon M1"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pohon M2"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Dopravník"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Chod váhy"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 19
+        }
+      }
+    },
+    {
+      "id": 102,
+      "title": "Ranpak V10",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 4,
+        "y": 1,
+        "w": 4,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((V10_safetyReady{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Bezpečnost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((V10_bReadyToReceiveBox{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Příjem boxu",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((V10_bReadyToSendBox{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Výstup boxu",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((V10_bMachineError{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Chyba stroje",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "((V10_bLidSupplyLow{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Víka · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "((V10_bLidSupplyLowError{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Víka · došla",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "G",
+          "expr": "((V10_bGlueSupplyLowError{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Lepidlo · došlo",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "●",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bezpečnost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Příjem boxu"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Výstup boxu"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Chyba stroje"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Víka · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Víka · došla"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lepidlo · došlo"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 19
+        }
+      }
+    },
+    {
+      "id": 103,
+      "title": "Ranpak V20",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 4,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((V20_safetyReady{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Bezpečnost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((V20_bReadyToReceiveBox{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Příjem boxu",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((V20_bReadyToSendBox{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Výstup boxu",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((V20_bMachineError{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Chyba stroje",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "((V20_bLidSupplyLow{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Víka · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "((V20_bLidSupplyLowError{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Víka · došla",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "G",
+          "expr": "((V20_bGlueSupplyLowError{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Lepidlo · došlo",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "●",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bezpečnost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Příjem boxu"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Výstup boxu"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Chyba stroje"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Víka · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Víka · došla"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lepidlo · došlo"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 19
+        }
+      }
+    },
+    {
+      "id": 104,
+      "title": "AKL pravá · P1",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 4,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((Line1_SystemReady{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Připravenost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((Line1_StartDispatch{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Výdej boxu",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((Line1_LabelWarning{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Etikety · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((Line1_LabelOut{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Etikety · došly",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "((Line1_RibbonWarning{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Páska · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "((Line1_RibbonOut{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Páska · došla",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "G",
+          "expr": "((Line1_PassthroughMode{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Bez etiketování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "●",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Připravenost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Výdej boxu"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Etikety · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Etikety · došly"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Páska · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Páska · došla"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bez etiketování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "purple",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 19
+        }
+      }
+    },
+    {
+      "id": 105,
+      "title": "AKL levá · P2",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 4,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((Line2_SystemReady{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Připravenost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((Line2_StartDispatch{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Výdej boxu",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((Line2_LabelWarning{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Etikety · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((Line2_LabelOut{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Etikety · došly",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "((Line2_RibbonWarning{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Páska · varování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "((Line2_RibbonOut{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Páska · došla",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "G",
+          "expr": "((Line2_PassthroughMode{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Bez etiketování",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "●",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Připravenost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Výdej boxu"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Etikety · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Etikety · došly"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Páska · varování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Páska · došla"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bez etiketování"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "purple",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 19
+        }
+      }
+    },
+    {
+      "id": 106,
+      "title": "Teleskopy",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 20,
+        "y": 1,
+        "w": 4,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((pasChod_levy_T1{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "T1 · chod",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((safetyReady_levy_T1{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "T1 · bezpečnost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((pasChod_pravy_T2{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "T2 · chod",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((safetyReady_pravy_T2{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "T2 · bezpečnost",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "●",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "min": 0,
+          "max": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T1 · chod"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T1 · bezpečnost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T2 · chod"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T2 · bezpečnost"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "●",
+                        "color": "gray",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "●",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 19
+        }
+      }
+    },
+    {
+      "id": 110,
+      "type": "row",
+      "title": "Bezpečnost",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 111,
+      "title": "Smartlog · nouzová tlačítka",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 14,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((smartlog_estop_active{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "{{estop}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "●",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "●",
+                  "color": "red",
+                  "index": 1
+                },
+                "-1": {
+                  "text": "●",
+                  "color": "gray",
+                  "index": 2
+                }
+              }
+            }
+          ],
+          "min": -1,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 22
+        }
+      }
+    },
+    {
+      "id": 112,
+      "title": "Gebhardt · nouzová tlačítka",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 14,
+        "y": 9,
+        "w": 10,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((aktivovanoTlacitko1{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Tlačítko 1",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((aktivovanoTlacitko2{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Tlačítko 2",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "((aktivovanoTlacitko3{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Tlačítko 3",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "D",
+          "expr": "((aktivovanoTlacitko4{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Tlačítko 4",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "E",
+          "expr": "((aktivovanoTlacitko5{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Tlačítko 5",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "F",
+          "expr": "((aktivovanoTlacitko6{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "Tlačítko 6",
+          "instant": true,
+          "range": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "●",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "●",
+                  "color": "red",
+                  "index": 1
+                },
+                "-1": {
+                  "text": "●",
+                  "color": "gray",
+                  "index": 2
+                }
+              }
+            }
+          ],
+          "min": -1,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "wideLayout": true,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 22
+        }
+      }
+    },
+    {
+      "id": 120,
+      "type": "row",
+      "title": "Stavy a materiálové události",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 121,
+      "title": "Historie provozních stavů",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 24,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_machine_state{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "{{station}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Bez potvrzení chodu",
+                  "color": "gray",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Připraveno",
+                  "color": "green",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Chod potvrzen",
+                  "color": "green",
+                  "index": 2
+                },
+                "3": {
+                  "text": "Čekání před zařízením",
+                  "color": "yellow",
+                  "index": 3
+                },
+                "4": {
+                  "text": "Doplňte materiál",
+                  "color": "orange",
+                  "index": 4
+                },
+                "5": {
+                  "text": "Materiál došel",
+                  "color": "red",
+                  "index": 5
+                },
+                "6": {
+                  "text": "Chyba stroje",
+                  "color": "red",
+                  "index": 6
+                },
+                "7": {
+                  "text": "Bezpečnost nepřipravena",
+                  "color": "red",
+                  "index": 7
+                },
+                "8": {
+                  "text": "Průchod bez etiketování",
+                  "color": "purple",
+                  "index": 8
+                },
+                "-1": {
+                  "text": "Bez platných dat",
+                  "color": "gray",
+                  "index": 9
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "spanNulls": false,
+            "insertNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vaha"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Váha"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V10"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Ranpak V10"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "V20"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Ranpak V20"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL1"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL pravá"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AKL2"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "AKL levá"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T1"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Teleskop levý"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "T2"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Teleskop pravý"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [],
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.75,
+        "alignValue": "left"
+      }
+    },
+    {
+      "id": 122,
+      "title": "Ranpak · chyba stroje",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((V10_bMachineError{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "V10",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "((V20_bMachineError{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "V20",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Bez chyby",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Chyba",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "spanNulls": false,
+            "insertNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [],
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.75,
+        "alignValue": "left"
+      }
+    },
+    {
+      "id": 123,
+      "title": "Materiál · aktivace stop",
+      "description": "",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 8,
+        "y": 22,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "increase(line_material_activations_total{job=\"${job}\",instance=\"${instance}\",level=\"stop\"}[${__range_s}s])",
+          "legendFormat": "{{machine}} · {{material}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      }
+    },
+    {
+      "id": 124,
+      "title": "AKL · materiálové stavy",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 16,
+        "y": 22,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_material_active{job=\"${job}\",instance=\"${instance}\",machine=~\"AKL1|AKL2\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "{{machine}} · {{material}} · {{level}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Neaktivní",
+                  "color": "gray",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Aktivní",
+                  "color": "orange",
+                  "index": 1
+                },
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 2
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "spanNulls": false,
+            "insertNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [],
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.75,
+        "alignValue": "left"
+      }
+    },
+    {
+      "id": 125,
+      "title": "Varování → stop · poslední měření",
+      "description": "",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((line_material_warning_lead_seconds{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "{{machine}} · {{material}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      }
+    },
+    {
+      "id": 126,
+      "title": "AKL · průchod bez etiketování",
+      "description": "",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 12,
+        "y": 28,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_label_bypass_active{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "{{machine}}",
+          "instant": false,
+          "range": true,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Vypnuto",
+                  "color": "gray",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Bez etiketování",
+                  "color": "purple",
+                  "index": 1
+                },
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 2
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "spanNulls": false,
+            "insertNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [],
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "mergeValues": true,
+        "showValue": "never",
+        "rowHeight": 0.75,
+        "alignValue": "left"
+      }
+    },
+    {
+      "id": 130,
+      "type": "row",
+      "title": "BR / Plausicheck",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 131,
+      "title": "BR · aktuální odpovědi",
+      "description": "",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 6,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((line_br_response_code{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (plc_data_valid{job=\"${job}\",instance=\"${instance}\"} == 1)) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "address": true,
+              "condition": true,
+              "estop": true,
+              "instance": true,
+              "job": true,
+              "level": true,
+              "location": true,
+              "machine": true,
+              "material": true
+            },
+            "indexByName": {
+              "station": 0,
+              "Value": 1
+            },
+            "renameByName": {
+              "station": "Pozice",
+              "Value": "Kód odpovědi"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 132,
+      "title": "BR · chybová pozorování",
+      "description": "",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 6,
+        "y": 35,
+        "w": 6,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "increase(line_br_observations_total{job=\"${job}\",instance=\"${instance}\",result=\"error\"}[${__range_s}s])",
+          "legendFormat": "{{station}}",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "left",
+        "minVizHeight": 14,
+        "minVizWidth": 0,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 12
+        }
+      }
+    },
+    {
+      "id": 133,
+      "title": "BR · kvalita čtení",
+      "description": "",
+      "type": "table",
+      "gridPos": {
+        "x": 12,
+        "y": 35,
+        "w": 6,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_br_data_valid{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Neplatné",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Platné",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "address": true,
+              "condition": true,
+              "estop": true,
+              "instance": true,
+              "job": true,
+              "level": true,
+              "location": true,
+              "machine": true,
+              "material": true
+            },
+            "indexByName": {
+              "station": 0,
+              "Value": 1
+            },
+            "renameByName": {
+              "station": "Pozice",
+              "Value": "Stav"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 134,
+      "title": "Plausicheck · ShippingLabel",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 35,
+        "w": 6,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(line_plausi_label_present{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Prázdný",
+                  "color": "gray",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Vyplněný",
+                  "color": "green",
+                  "index": 1
+                },
+                "-1": {
+                  "text": "Bez dat",
+                  "color": "gray",
+                  "index": 2
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 26
+        }
+      }
+    },
+    {
+      "id": 135,
+      "title": "Archiv",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 38,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(event_journal_healthy{job=\"${job}\",instance=\"${instance}\"}) and on(job,instance) (up{job=\"${job}\",instance=\"${instance}\"} == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Nedostupný",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Zapisuje",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 26
+        }
+      }
+    },
+    {
+      "id": 140,
+      "type": "row",
+      "title": "Sběr a integrita",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 141,
+      "title": "Zahozené záznamy · od startu",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 8,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "event_journal_dropped_total{job=\"${job}\",instance=\"${instance}\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 26
+        }
+      }
+    },
+    {
+      "id": 142,
+      "title": "Nespojitosti počítadla · od startu",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 8,
+        "y": 43,
+        "w": 8,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "line_box_counter_discontinuities_total{job=\"${job}\",instance=\"${instance}\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 26
+        }
+      }
+    },
+    {
+      "id": 143,
+      "title": "Stáří PLC dat",
+      "description": "",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 43,
+        "w": 8,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "plc_data_staleness_seconds{job=\"${job}\",instance=\"${instance}\"}",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Bez dat",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "text": {
+          "titleSize": 12,
+          "valueSize": 26
+        }
+      }
+    }
+  ],
+  "graphTooltip": 1,
+  "links": [
+    {
+      "title": "Provozní přehled",
+      "type": "link",
+      "url": "/d/plc-line-overview",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Detail zařízení",
+      "type": "link",
+      "url": "/d/plc-machine-detail",
+      "includeVars": true,
+      "keepTime": true
+    },
+    {
+      "title": "Historie boxů / incidentů",
+      "type": "link",
+      "url": "${history_url}",
+      "targetBlank": true
+    }
+  ],
+  "annotations": {
+    "list": []
+  }
+}
