@@ -79,7 +79,7 @@ Get-ChildItem -LiteralPath $appDir -Directory -Recurse -Filter ".cache" -ErrorAc
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host "== Launchers =="
-foreach ($file in @("start.bat","debug.bat","logout.bat","check.bat","README.txt")) {
+foreach ($file in @("start.bat","start-hidden.vbs","debug.bat","logout.bat","check.bat","README.txt")) {
     Copy-Item -LiteralPath (Join-Path $root "desktop_commander\$file") -Destination $stage
 }
 
@@ -128,6 +128,9 @@ Expand-Archive -LiteralPath $zipPath -DestinationPath $verifyDir
 $verifyRoot = Join-Path $verifyDir "desktop_commander"
 if (-not (Test-Path -LiteralPath (Join-Path $verifyRoot "start.bat"))) {
     throw "ZIP root validation failed: desktop_commander\start.bat was not found."
+}
+if (-not (Test-Path -LiteralPath (Join-Path $verifyRoot "start-hidden.vbs"))) {
+    throw "ZIP root validation failed: desktop_commander\start-hidden.vbs was not found."
 }
 if (-not (Test-Path -LiteralPath (Join-Path $verifyRoot "node\node.exe"))) {
     throw "ZIP root validation failed: portable node.exe was not found."
