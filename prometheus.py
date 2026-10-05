@@ -15,7 +15,7 @@ import logging
 import time
 import os
 from config import PLC_MAX_SAMPLE_GAP_SEC
-import pandas as pd
+from datetime import date, datetime
 from lineMonitor import monitor
 from eventJournal import journal
 from history import history_blueprint
@@ -268,12 +268,20 @@ def metrics():
             datum = entry.get("datum")
             if value is None or datum is None:
                 continue
-            parsed_date = pd.to_datetime(datum, errors="coerce")
-            if pd.isna(parsed_date):
+            try:
+                if isinstance(datum, datetime):
+                    parsed_date = datum.date()
+                elif isinstance(datum, date):
+                    parsed_date = datum
+                else:
+                    parsed_date = date.fromisoformat(str(datum).strip())
+            except (TypeError, ValueError):
                 continue
-            excel_target_by_date[parsed_date.date().isoformat()] = float(value)
+            excel_target_by_date[parsed_date.isoformat()] = float(value)
 
-        today_local = pd.Timestamp.now(tz="Europe/Prague").date().isoformat()
+        # Exportér běží na provozním Windows PC v lokálním časovém pásmu závodu.
+        # date.today() zde nahrazuje těžkou pandas/tzdata závislost.
+        today_local = date.today().isoformat()
         active_target_date = None
         if today_local in excel_target_by_date:
             active_target_date = today_local
