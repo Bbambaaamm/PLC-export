@@ -12,7 +12,7 @@ if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = Join-Path $root "dist"
 }
 $OutputDir = [IO.Path]::GetFullPath($OutputDir)
-$stage = Join-Path $OutputDir "PLC-export"
+$stage = Join-Path $OutputDir "plc_exporter"
 $zipPath = Join-Path $OutputDir "PLC-export-portable-win-x64.zip"
 $temp = Join-Path $OutputDir "_portable_tmp"
 
@@ -110,7 +110,7 @@ $sevenZip = Get-Command 7z.exe -ErrorAction SilentlyContinue
 if ($sevenZip) {
     Push-Location $OutputDir
     try {
-        & $sevenZip.Source a -tzip -mx=9 -mfb=258 -mpass=15 (Split-Path -Leaf $zipPath) "PLC-export\*" | Out-Host
+        & $sevenZip.Source a -tzip -mx=9 -mfb=258 -mpass=15 (Split-Path -Leaf $zipPath) "plc_exporter\*" | Out-Host
         if ($LASTEXITCODE -ne 0) { throw "7-Zip creation failed." }
     }
     finally {
