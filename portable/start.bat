@@ -43,7 +43,7 @@ if not defined PROM_RETENTION_SIZE set "PROM_RETENTION_SIZE=512MB"
 powershell -NoProfile -Command "$x=Get-NetTCPConnection -State Listen -LocalPort 8000 -ErrorAction SilentlyContinue; if($x){exit 0}else{exit 1}"
 if errorlevel 1 (
     echo Startuji PLC exporter...
-    powershell -NoProfile -Command "Start-Process -FilePath '%~dp0Python\python.exe' -ArgumentList @('"%~dp0exporter.py"') -WorkingDirectory '%~dp0' -WindowStyle Hidden"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0launch-hidden.ps1" exporter
     if errorlevel 1 (
         echo CHYBA: PLC exporter se nepodarilo spustit.
         if "%HIDDEN_MODE%"=="0" pause
@@ -65,7 +65,7 @@ if errorlevel 1 (
 powershell -NoProfile -Command "$x=Get-NetTCPConnection -State Listen -LocalPort 9090 -ErrorAction SilentlyContinue; if($x){exit 0}else{exit 1}"
 if errorlevel 1 (
     echo Startuji Prometheus...
-    powershell -NoProfile -Command "$a=@('--config.file="%~dp0prometheus\prometheus.runtime.yml"','--storage.tsdb.path="%~dp0prometheus\data"','--storage.tsdb.retention.time=%PROM_RETENTION_TIME%','--storage.tsdb.retention.size=%PROM_RETENTION_SIZE%'); Start-Process -FilePath '%~dp0prometheus\prometheus.exe' -ArgumentList $a -WorkingDirectory '%~dp0prometheus' -WindowStyle Hidden"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0launch-hidden.ps1" prometheus
     if errorlevel 1 (
         echo CHYBA: Prometheus se nepodarilo spustit.
         if "%HIDDEN_MODE%"=="0" pause
@@ -88,5 +88,5 @@ if errorlevel 1 (
 
 echo.
 echo Data Promethea jsou omezena na %PROM_RETENTION_TIME% nebo %PROM_RETENTION_SIZE% podle toho, co nastane drive.
-    if "%HIDDEN_MODE%"=="0" pause
+if "%HIDDEN_MODE%"=="0" pause
 exit /b 0
