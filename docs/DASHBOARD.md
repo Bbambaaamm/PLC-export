@@ -32,11 +32,12 @@ testy ověřují shodu s generátorem a parsují všechny panelové PromQL výra
 
 ## Profesionální provozní layout
 
-Hlavní dashboard je záměrně rozdělen na rozhodovací vrstvu a technickou diagnostiku.
+Hlavní dashboard je navržen jako jednoobrazovkový control-room přehled pro 16:9 displej.
 Horní řada obsahuje jen KPI, která mají význam pro okamžité řízení linky: denní počet,
 5min tempo, BR08 za posledních 60 minut, počet aktivních čekání, počet kritických stavů
 a platnost PLC dat. OEE a predikce směny nejsou v overview zobrazovány, dokud nemají
-schválenou provozní definici.
+schválenou provozní definici. Sekční řádky a detailní PLC karty byly z overview odstraněny,
+aby nebylo nutné pro základní rozhodování rolovat stránku.
 
 Graf **Produkce · BR08 za posledních 60 minut** zobrazuje pět křivek: **Celkem, Boxy 05,
 10, 15, 20**. Každý bod používá `increase(br08_prefix_total[1h])`, tedy klouzavý
@@ -51,11 +52,12 @@ graf zůstává čitelný. Stavové barvy jsou konzistentní: zelená = připrav
 = čekání nebo varování, červená = stop/chyba/bezpečnost, fialová = bypass, šedá = neaktivní
 nebo neznámý stav.
 
-Nouzová tlačítka používají kompaktní stavovou matici: u každého okruhu se zobrazuje pouze
-název a barevný bod. Zelený bod znamená neaktivní E-STOP, červený aktivní E-STOP a šedý
-neplatná data. Detailní provozní bity Ranpak/AKL/Smartlog/Teleskop byly přesunuty do
-`technical-diagnostics.json`, kde mají stejný kompaktní status-dot design místo dlouhých
-dekorativních barů.
+Overview zobrazuje bezpečnost pouze jako dva souhrnné stavy **Smartlog** a **Gebhardt**:
+zelený `● OK` znamená, že žádný sledovaný E-STOP není aktivní, červený `● ESTOP` znamená
+alespoň jeden aktivní okruh a šedý stav znamená neplatná data. Jednotlivé nouzové okruhy
+jsou až v `technical-diagnostics.json`, kde se zobrazují jako kompaktní barevné body.
+Stejně tak byly detailní provozní bity Ranpak/AKL/Smartlog/Teleskop přesunuty z overview
+do technické diagnostiky.
 
 Hodinový BR08 graf vyžaduje alespoň 95 % pokrytí v daném hodinovém okně a platné BR08
 vzorky. Po startu nemusí být hodinu dostupný. Při zastavení klesá hodinový součet postupně,
