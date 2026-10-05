@@ -34,6 +34,7 @@ Copy-Item -LiteralPath (Join-Path $root "portable\start.bat") -Destination $stag
 Copy-Item -LiteralPath (Join-Path $root "portable\start-hidden.vbs") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\start-boot.vbs") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\launch-hidden.ps1") -Destination $stage
+Copy-Item -LiteralPath (Join-Path $root "portable\runtime-check.ps1") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\autostart.ps1") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\autostart-enable.bat") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $root "portable\autostart-disable.bat") -Destination $stage
@@ -111,7 +112,7 @@ try {
     & ".\prometheus\prometheus.exe" --version
     if ($LASTEXITCODE -ne 0) { throw "Prometheus smoke test failed." }
 
-    foreach ($scriptName in @("autostart.ps1","launch-hidden.ps1","prepare-prometheus.ps1","grafana-cloud-setup.ps1")) {
+    foreach ($scriptName in @("autostart.ps1","launch-hidden.ps1","runtime-check.ps1","prepare-prometheus.ps1","grafana-cloud-setup.ps1")) {
         $tokens = $null
         $errors = $null
         [void][System.Management.Automation.Language.Parser]::ParseFile(
@@ -177,6 +178,9 @@ if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\start-boot.
 }
 if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\launch-hidden.ps1"))) {
     throw "ZIP root validation failed: plc_exporter\launch-hidden.ps1 was not found."
+}
+if (-not (Test-Path -LiteralPath (Join-Path $verifyDir "plc_exporter\runtime-check.ps1"))) {
+    throw "ZIP root validation failed: plc_exporter\runtime-check.ps1 was not found."
 }
 foreach ($required in @("autostart.ps1","autostart-enable.bat","autostart-disable.bat","autostart-status.bat")) {
     if (-not (Test-Path -LiteralPath (Join-Path $verifyDir ("plc_exporter\" + $required)))) {
