@@ -1,5 +1,9 @@
 # PLC exportér
 
+**Nasazení na PC v hale:** [Windows — připojení Desktop Commanderu a sbírka příkazů](docs/WINDOWS_START.md).
+Příkazy lze kopírovat přímo z GitHubu; návod zahrnuje přípravu bez Gitu,
+offline závislosti, kontrolu sběru, Grafanu a návrat k původní verzi.
+
 Read-only sběr DB přes Snap7 a export metrik na `/metrics` (port 8000).
 Spouštěcí bod je `python exporter.py`: jedno PLC vlákno, jedno Excel vlákno
 vlákno archivu SQLite a HTTP obsluha. Samotný import Flask aplikace PLC ani Excel sběr nespustí.
