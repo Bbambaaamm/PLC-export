@@ -33,7 +33,7 @@ function Test-PortOwner {
             }
         }
         catch {
-            Write-Host "CHYBA: nelze overit vlastnika portu $Port: $($_.Exception.Message)"
+            Write-Host "CHYBA: nelze overit vlastnika portu ${Port}: $($_.Exception.Message)"
             exit 2
         }
     }
